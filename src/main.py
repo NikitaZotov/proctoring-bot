@@ -1,5 +1,5 @@
-from proctoring_bot import ProctoringBot
+from bot_starter import BotStarter
+
 
 if __name__ == '__main__':
-    bot = ProctoringBot()
-    bot.start()
+    BotStarter().start()
