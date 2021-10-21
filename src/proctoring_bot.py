@@ -12,8 +12,9 @@ from telegram.ext import (
 class ProctoringBot:
     states = {
         'choosing': 0,
-        'typing_reply': 1,
-        'typing_choice': 2
+        'keyboard': 1,
+        'reading_info': 2,
+        'get_info': 3
     }
 
     __keys = [
@@ -25,32 +26,46 @@ class ProctoringBot:
     @staticmethod
     def get_student_info(user_data: Dict[str, str]) -> str:
         info = [f'{key} - {value}' for key, value in user_data.items()]
-        return "\n".join(info).join(['\n', '\n'])
+        return '\n'.join(info).join(['\n', '\n'])
 
-    def init_conversation(self, update: Update, context: CallbackContext) -> int:
+    def greet(self, update: Update, context: CallbackContext) -> int:
         update.message.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Доброго времени суток!",
-            reply_markup=ReplyKeyboardMarkup(self.__keys),
+            text='Доброго времени суток!',
+            reply_markup=ReplyKeyboardMarkup([['ФИО']], one_time_keyboard=True),
         )
         return self.states['choosing']
 
-    def regular_choice(self, update: Update, context: CallbackContext) -> int:
-        text = update.message.text
-        context.user_data['choice'] = text
+    def get_name(self, update: Update, context: CallbackContext) -> int:
         update.message.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f'Введите Ваше {text}'
+            text=f'Введи имя'
         )
-        return self.states['typing_reply']
+        context.user_data['key'] = 'Группа'
+        return self.states['keyboard']
 
-    def receive_information(self, update: Update, context: CallbackContext) -> int:
-        user_data = context.user_data
-        text = update.message.text
-        category = user_data['choice']
-        user_data[category] = text
-        del user_data['choice']
-        return self.states['choosing']
+    def get_group(self, update: Update, context: CallbackContext) -> int:
+        update.message.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f'Введи группу'
+        )
+        context.user_data['key'] = 'Подгруппа'
+        return self.states['keyboard']
+
+    def get_subgroup(self, update: Update, context: CallbackContext) -> int:
+        update.message.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f'Введи подгруппу'
+        )
+        return self.states['keyboard']
+
+    def show_keyboard(self, update: Update, context: CallbackContext) -> int:
+        update.message.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text='Ок!',
+            reply_markup=ReplyKeyboardMarkup([[context.user_data['key']]], one_time_keyboard=True),
+        )
+        return self.states['get_info']
 
     @staticmethod
     def done(update: Update, context: CallbackContext) -> int:
@@ -60,7 +75,7 @@ class ProctoringBot:
 
         update.message.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f"Информация о Вас: {ProctoringBot.get_student_info(user_data)}",
+            text=f'Информация о Вас: {ProctoringBot.get_student_info(user_data)}',
             reply_markup=ReplyKeyboardRemove(),
         )
 

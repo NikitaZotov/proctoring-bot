@@ -22,22 +22,31 @@ class BotStarter:
         dispatcher = updater.dispatcher
 
         conversation_handler = ConversationHandler(
-            entry_points=[CommandHandler('start', bot.init_conversation)],
+            entry_points=[CommandHandler('start', bot.greet)],
             states={
                 bot.states['choosing']: [
                     MessageHandler(
-                        Filters.regex('^(ФИО|Группа|Подгруппа)$'), bot.regular_choice
+                        Filters.regex('^ФИО$'), bot.get_name
                     )
                 ],
-                bot.states['typing_choice']: [
+                bot.states['get_info']: [
                     MessageHandler(
-                        Filters.text & ~(Filters.command | Filters.regex('^Информация указана.$')), bot.regular_choice
+                        Filters.regex('^Группа$'), bot.get_group
                     )
                 ],
-                bot.states['typing_reply']: [
+                bot.states['get_info']: [
                     MessageHandler(
-                        Filters.text & ~(Filters.command | Filters.regex('^Информация указана.$')),
-                        bot.receive_information,
+                        Filters.regex('^Подгруппа$'), bot.get_subgroup
+                    )
+                ],
+                bot.states['keyboard']: [
+                    MessageHandler(
+                        Filters.text, bot.show_keyboard
+                    )
+                ],
+                bot.states['reading_info']: [
+                    MessageHandler(
+                        Filters.text & ~Filters.command, bot.done
                     )
                 ],
             },
