@@ -1,58 +1,67 @@
-import configparser
-
+"""
+"""
 from telegram.ext import (
     Updater,
     CommandHandler,
     MessageHandler,
     Filters,
-    ConversationHandler
+    ConversationHandler, ChatMemberHandler, CallbackQueryHandler
 )
 
 from proctoring_bot import ProctoringBot
 
 
 class BotStarter:
-    @staticmethod
-    def start():
-        bot = ProctoringBot()
+    def __init__(self, token):
+        self.bot = ProctoringBot()
+        self.updater = Updater(token)
+        self.dispatcher = self.updater.dispatcher
 
-        config = configparser.ConfigParser()
-        config.read("settings.ini")
-        updater = Updater(config['Bot']['token'])
-        dispatcher = updater.dispatcher
-
-        conversation_handler = ConversationHandler(
-            entry_points=[CommandHandler('start', bot.greet)],
+    def get_description_conversation_handler(self) -> ConversationHandler:
+        return ConversationHandler(
+            entry_points=[
+                CallbackQueryHandler(self.bot.select_attribute, pattern='^' + str(self.bot.INFO) + '$')
+            ],
             states={
-                bot.states['choosing']: [
-                    MessageHandler(
-                        Filters.regex('^ФИО$'), bot.get_name
-                    )
+                self.bot.SPECIFY_ATTRIBUTE: [
+                    CallbackQueryHandler(self.bot.request_attribute, pattern='^(?!' + str(self.bot.END) + ').*$')
                 ],
-                bot.states['get_info']: [
-                    MessageHandler(
-                        Filters.regex('^Группа$'), bot.get_group
-                    )
-                ],
-                bot.states['get_info']: [
-                    MessageHandler(
-                        Filters.regex('^Подгруппа$'), bot.get_subgroup
-                    )
-                ],
-                bot.states['keyboard']: [
-                    MessageHandler(
-                        Filters.text, bot.show_keyboard
-                    )
-                ],
-                bot.states['reading_info']: [
-                    MessageHandler(
-                        Filters.text & ~Filters.command, bot.done
-                    )
+                self.bot.TYPE: [
+                    MessageHandler(Filters.text & ~Filters.command, self.bot.save_attribute)
                 ],
             },
-            fallbacks=[MessageHandler(Filters.regex('^Информация указана.$'), bot.done)],
+            fallbacks=[
+                CallbackQueryHandler(self.bot.end_describing, pattern='^' + str(self.bot.END) + '$'),
+                CommandHandler('stop', self.bot.stop_describing),
+            ],
+            map_to_parent={
+                self.bot.END: self.bot.DESCRIBE_USER,
+                self.bot.STOP: self.bot.STOP
+            },
         )
-        dispatcher.add_handler(conversation_handler)
 
-        updater.start_polling()
-        updater.idle()
+    def get_main_conversation_handler(self) -> ConversationHandler:
+        selection_handlers = [
+            CallbackQueryHandler(self.bot.show_user_info, pattern='^' + str(self.bot.SHOW) + '$'),
+            CallbackQueryHandler(self.bot.add_user, pattern='^' + str(self.bot.ADD_USER) + '$'),
+        ]
+        return ConversationHandler(
+            entry_points=[CommandHandler('start', self.bot.start_conversation)],
+            states={
+                self.bot.SHOW: [CallbackQueryHandler(self.bot.start_conversation, pattern='^' + str(self.bot.END) + '$')],
+                self.bot.SELECT_ACTION: selection_handlers,
+                self.bot.DESCRIBE_USER: [self.get_description_conversation_handler()],
+                self.bot.STOP: [CommandHandler('start', self.bot.start_conversation)],
+            },
+            fallbacks=[CommandHandler('stop', self.bot.stop_conversation)],
+        )
+
+    def get_chat_member_handler(self):
+        return ChatMemberHandler(self.bot.greet_chat_members, ChatMemberHandler.CHAT_MEMBER)
+
+    def handle(self):
+        self.dispatcher.add_handler(self.get_main_conversation_handler())
+        self.dispatcher.add_handler(self.get_chat_member_handler())
+
+        self.updater.start_polling()
+        self.updater.idle()
