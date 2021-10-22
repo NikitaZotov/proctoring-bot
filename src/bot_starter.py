@@ -15,8 +15,8 @@ class BotStarter:
     START = 'start'
     STOP = 'stop'
 
-    def __init__(self, token):
-        self.bot = ProctoringBot()
+    def __init__(self, token, kick_min):
+        self.bot = ProctoringBot(kick_min)
         self.updater = Updater(token)
         self.dispatcher = self.updater.dispatcher
 
