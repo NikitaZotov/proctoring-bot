@@ -38,7 +38,7 @@ class BotStarter:
                 CommandHandler(self.STOP, self.bot.stop_describing),
             ],
             map_to_parent={
-                self.bot.END: self.bot.DESCRIBE_USER,
+                self.bot.END: self.bot.SELECT_ACTION,
                 self.bot.STOP: self.bot.STOP
             },
         )

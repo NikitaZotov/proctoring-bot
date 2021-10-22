@@ -1,6 +1,5 @@
 """
 """
-import configparser
 import logging
 from typing import Dict, Optional, Tuple, Any, List
 
@@ -57,7 +56,7 @@ class ProctoringBot:
         )
         keyboard = ProctoringBot._get_inline_keyboard_markup([
             {'Зарегистрироваться': self.ADD_USER},
-            {'Посмотреть информацию о себе': self.END}
+            {'Посмотреть информацию о себе': self.SHOW}
         ])
 
         if context.user_data.get(self.REPEATED_START):
@@ -87,13 +86,12 @@ class ProctoringBot:
     def show_user_info(self, update: Update, context: CallbackContext) -> str:
         def get_info(user_data: Dict[str, Any]) -> str:
             user_id = user_data.get(self.USER_ID)
-            print(user_id)
             if not user_id and not user_data[user_id]:
                 return '\nВы не зарегестрированы.'
 
             user_info = user_data[user_id]
             text = ''
-            text += f"\nФИО: {user_info.get(self.NAME, '-')}, Группа: {user_info.get(self.GROUP, '-')}, " \
+            text += f"\nФИО: {user_info.get(self.NAME, '-')},\nГруппа: {user_info.get(self.GROUP, '-')},\n" \
                     f"Подгруппа: {user_info.get(self.SUBGROUP, '-')}"
 
             return text
@@ -176,7 +174,7 @@ class ProctoringBot:
         user_id = user_data[self.USER_ID]
         if not user_data.get(user_id):
             user_data[user_id] = []
-        user_data[user_id].append(user_data[self.ATTRIBUTES])
+        user_data[user_id] = user_data[self.ATTRIBUTES]
 
         user_data = context.user_data
         user_data[self.REPEATED_START] = True
