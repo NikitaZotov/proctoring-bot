@@ -10,3 +10,10 @@ class EntryChecker:
                 return False
 
         return True
+
+    @staticmethod
+    def to_minutes_str_format(minutes: int) -> str:
+        if minutes % 10 == 1 and minutes % 100 != 11:
+            return f'{minutes} минуты'
+        else:
+            return f'{minutes} минут'

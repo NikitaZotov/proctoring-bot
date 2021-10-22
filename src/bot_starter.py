@@ -12,6 +12,9 @@ from proctoring_bot import ProctoringBot
 
 
 class BotStarter:
+    START = 'start'
+    STOP = 'stop'
+
     def __init__(self, token):
         self.bot = ProctoringBot()
         self.updater = Updater(token)
@@ -32,7 +35,7 @@ class BotStarter:
             },
             fallbacks=[
                 CallbackQueryHandler(self.bot.end_describing, pattern='^' + str(self.bot.END) + '$'),
-                CommandHandler('stop', self.bot.stop_describing),
+                CommandHandler(self.STOP, self.bot.stop_describing),
             ],
             map_to_parent={
                 self.bot.END: self.bot.DESCRIBE_USER,
@@ -46,14 +49,14 @@ class BotStarter:
             CallbackQueryHandler(self.bot.add_user, pattern='^' + str(self.bot.ADD_USER) + '$'),
         ]
         return ConversationHandler(
-            entry_points=[CommandHandler('start', self.bot.start_conversation)],
+            entry_points=[CommandHandler(self.START, self.bot.start_conversation)],
             states={
                 self.bot.SHOW: [CallbackQueryHandler(self.bot.start_conversation, pattern='^' + str(self.bot.END) + '$')],
                 self.bot.SELECT_ACTION: selection_handlers,
                 self.bot.DESCRIBE_USER: [self.get_description_conversation_handler()],
-                self.bot.STOP: [CommandHandler('start', self.bot.start_conversation)],
+                self.bot.STOP: [CommandHandler(self.START, self.bot.start_conversation)],
             },
-            fallbacks=[CommandHandler('stop', self.bot.stop_conversation)],
+            fallbacks=[CommandHandler(self.STOP, self.bot.stop_conversation)],
         )
 
     def get_chat_member_handler(self):
