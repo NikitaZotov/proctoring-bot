@@ -2,7 +2,7 @@ class EntryChecker:
     @staticmethod
     def is_name_correct(name: str) -> bool:
         words = name.split()
-        if len(words) > 4:
+        if len(words) != 3:
             return False
 
         for word in words:

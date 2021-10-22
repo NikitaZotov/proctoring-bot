@@ -14,6 +14,7 @@ from telegram.ext import (
 )
 
 from loggers import LogInstaller
+from src.logic.entry_checker import EntryChecker
 
 
 class ProctoringBot:
@@ -41,14 +42,15 @@ class ProctoringBot:
         SUBGROUP,
         NAME,
         REPEATED_START,
-    ) = map(chr, range(10, 18))
+        ERROR
+    ) = map(chr, range(10, 19))
 
     def start_conversation(self, update: Update, context: CallbackContext) -> str:
         text = (
             'Для начала работы необходимо указать персональную информацию. '
             'Пожалуйста, зарегистрируйтесь.'
         )
-        keyboard = ProctoringBot.get_inline_keyboard_markup([
+        keyboard = ProctoringBot._get_inline_keyboard_markup([
             {'Зарегистрироваться': self.ADD_USER},
             {'Посмотреть информацию о себе': self.END}
         ])
@@ -68,7 +70,7 @@ class ProctoringBot:
     def add_user(self, update: Update, context: CallbackContext) -> str:
         context.user_data[self.USER_ID] = str(update.effective_user.id)
         text = 'Хорошо, укажите информацию о себе.'
-        keyboard = ProctoringBot.get_inline_keyboard_markup([{
+        keyboard = ProctoringBot._get_inline_keyboard_markup([{
             'Указать информацию': self.INFO
         }])
 
@@ -92,7 +94,7 @@ class ProctoringBot:
             return text
 
         text_info = f"Информация:{get_info(context.user_data)}"
-        keyboard = ProctoringBot.get_inline_keyboard_markup([{
+        keyboard = ProctoringBot._get_inline_keyboard_markup([{
             'Назад': self.END
         }])
         update.callback_query.answer()
@@ -114,24 +116,33 @@ class ProctoringBot:
         return self.END
 
     def select_attribute(self, update: Update, context: CallbackContext) -> str:
-        keyboard = ProctoringBot.get_inline_keyboard_markup([{
+        user_data = context.user_data
+        keyboard = ProctoringBot._get_inline_keyboard_markup([{
             'ФИО': self.NAME,
             'Группа': self.GROUP,
             'Подгруппа': self.SUBGROUP,
             'Назад': self.END
         }])
 
-        if context.user_data.get(self.REPEATED_START):
-            text = 'Отлично! Выберите другой параметр.'
+        if user_data.get(self.REPEATED_START):
+            if user_data.get(self.ERROR):
+                text = user_data[self.ERROR]
+                del user_data[self.ERROR]
+            else:
+                text = 'Отлично! Выберите другой параметр.'
             update.message.reply_text(text=text, reply_markup=keyboard)
         else:
-            context.user_data[self.ATTRIBUTES] = {}
-            text = 'Выберите параметр.'
+            user_data[self.ATTRIBUTES] = {}
+            if user_data.get(self.ERROR):
+                text = user_data[self.ERROR]
+                del user_data[self.ERROR]
+            else:
+                text = 'Выберите параметр.'
 
             update.callback_query.answer()
             update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
 
-        context.user_data[self.REPEATED_START] = False
+        user_data[self.REPEATED_START] = False
         return self.SPECIFY_ATTRIBUTE
 
     def request_attribute(self, update: Update, context: CallbackContext) -> str:
@@ -145,8 +156,12 @@ class ProctoringBot:
 
     def save_attribute(self, update: Update, context: CallbackContext) -> str:
         user_data = context.user_data
-        user_data[self.ATTRIBUTES][user_data[self.CURRENT_ATTRIBUTE]] = update.message.text
+        text = update.message.text
 
+        if user_data[self.CURRENT_ATTRIBUTE] == self.NAME and not EntryChecker.is_name_correct(text):
+            user_data[self.ERROR] = 'Неверный ввод. Повторите.'
+
+        user_data[self.ATTRIBUTES][user_data[self.CURRENT_ATTRIBUTE]] = text
         user_data[self.REPEATED_START] = True
 
         return self.select_attribute(update, context)
@@ -170,7 +185,7 @@ class ProctoringBot:
         return self.STOP
 
     @staticmethod
-    def define_status(status, is_member) -> bool:
+    def _define_status(status, is_member) -> bool:
         return (
             status
             in [
@@ -182,7 +197,7 @@ class ProctoringBot:
         )
 
     @staticmethod
-    def extract_status_change(chat_member_update: ChatMemberUpdated) -> Optional[Tuple[bool, bool]]:
+    def _extract_status_change(chat_member_update: ChatMemberUpdated) -> Optional[Tuple[bool, bool]]:
         status_change = chat_member_update.difference().get('status')
         old_is_member, new_is_member = chat_member_update.difference().get('is_member', (None, None))
 
@@ -190,13 +205,13 @@ class ProctoringBot:
             return None
 
         old_status, new_status = status_change
-        was_member = ProctoringBot.define_status(old_status, old_is_member)
-        is_member = ProctoringBot.define_status(new_status, new_is_member)
+        was_member = ProctoringBot._define_status(old_status, old_is_member)
+        is_member = ProctoringBot._define_status(new_status, new_is_member)
 
         return was_member, is_member
 
     def greet_chat_members(self, update: Update, context: CallbackContext) -> None:
-        result = self.extract_status_change(update.chat_member)
+        result = self._extract_status_change(update.chat_member)
         if result is None:
             return
 
@@ -216,7 +231,7 @@ class ProctoringBot:
             )
 
     @staticmethod
-    def get_inline_keyboard_markup(buttons: List[Dict[str, str]]) -> InlineKeyboardMarkup:
+    def _get_inline_keyboard_markup(buttons: List[Dict[str, str]]) -> InlineKeyboardMarkup:
         keyboards = []
         keyboard_group = []
         for group in buttons:
