@@ -14,6 +14,7 @@ from proctoring_bot import ProctoringBot
 class BotStarter:
     START = 'start'
     STOP = 'stop'
+    INFO = 'info'
 
     def __init__(self, token, kick_min):
         self.bot = ProctoringBot(kick_min)
@@ -56,7 +57,9 @@ class BotStarter:
                 self.bot.DESCRIBE_USER: [self.get_description_conversation_handler()],
                 self.bot.STOP: [CommandHandler(self.START, self.bot.start_conversation)],
             },
-            fallbacks=[CommandHandler(self.STOP, self.bot.stop_conversation)],
+            fallbacks=[
+                CommandHandler(self.INFO, self.bot.show_concrete_user_info),
+                CommandHandler(self.START, self.bot.start_conversation)],
         )
 
     def get_chat_member_handler(self):
