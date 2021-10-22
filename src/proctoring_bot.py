@@ -1,7 +1,7 @@
 """
 """
 import logging
-from typing import Dict, Optional, Tuple, Any
+from typing import Dict, Optional, Tuple, Any, List
 
 from telegram import (
     Update, ChatMemberUpdated,
@@ -48,16 +48,10 @@ class ProctoringBot:
             'Для начала работы необходимо указать персональную информацию. '
             'Пожалуйста, зарегистрируйтесь.'
         )
-
-        buttons = [
-            [
-                InlineKeyboardButton(text='Зарегистрироваться', callback_data=str(self.ADD_USER))
-            ],
-            [
-                InlineKeyboardButton(text='Посмотреть информацию о себе', callback_data=str(self.END))
-            ],
-        ]
-        keyboard = InlineKeyboardMarkup(buttons)
+        keyboard = ProctoringBot.get_inline_keyboard_markup([
+            {'Зарегистрироваться': self.ADD_USER},
+            {'Посмотреть информацию о себе': self.END}
+        ])
 
         if context.user_data.get(self.REPEATED_START):
             update.callback_query.answer()
@@ -74,8 +68,9 @@ class ProctoringBot:
     def add_user(self, update: Update, context: CallbackContext) -> str:
         context.user_data[self.USER_ID] = str(update.effective_user.id)
         text = 'Хорошо, укажите информацию о себе.'
-        button = InlineKeyboardButton(text='Указать информацию', callback_data=str(self.INFO))
-        keyboard = InlineKeyboardMarkup.from_button(button)
+        keyboard = ProctoringBot.get_inline_keyboard_markup([{
+            'Указать информацию': self.INFO
+        }])
 
         update.callback_query.answer()
         update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
@@ -86,22 +81,20 @@ class ProctoringBot:
         def get_info(user_data: Dict[str, Any]) -> str:
             user_id = user_data.get(self.USER_ID)
             print(user_id)
-            if not user_id:
+            if not user_id and not user_data[user_id]:
                 return '\nВы не зарегестрированы.'
 
             user_info = user_data[user_id]
-            if not user_info:
-                return '\nВы не зарегестрированы.'
-
             text = ''
             text += f"\nФИО: {user_info.get(self.NAME, '-')}, Группа: {user_info.get(self.GROUP, '-')}, " \
                     f"Подгруппа: {user_info.get(self.SUBGROUP, '-')}"
 
             return text
 
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(text='Назад', callback_data=str(self.END))]])
         text_info = f"Информация:{get_info(context.user_data)}"
-
+        keyboard = ProctoringBot.get_inline_keyboard_markup([{
+            'Назад': self.END
+        }])
         update.callback_query.answer()
         update.callback_query.edit_message_text(text=text_info, reply_markup=keyboard)
         context.user_data[self.REPEATED_START] = True
@@ -121,25 +114,22 @@ class ProctoringBot:
         return self.END
 
     def select_attribute(self, update: Update, context: CallbackContext) -> str:
-        buttons = [
-            [
-                InlineKeyboardButton(text='ФИО', callback_data=str(self.NAME)),
-                InlineKeyboardButton(text='Группа', callback_data=str(self.GROUP)),
-                InlineKeyboardButton(text='Подгруппа', callback_data=str(self.SUBGROUP)),
-                InlineKeyboardButton(text='Назад', callback_data=str(self.END)),
-            ]
-        ]
-        keyboard = InlineKeyboardMarkup(buttons)
+        keyboard = ProctoringBot.get_inline_keyboard_markup([{
+            'ФИО': self.NAME,
+            'Группа': self.GROUP,
+            'Подгруппа': self.SUBGROUP,
+            'Назад': self.END
+        }])
 
-        if not context.user_data.get(self.REPEATED_START):
+        if context.user_data.get(self.REPEATED_START):
+            text = 'Отлично! Выберите другой параметр.'
+            update.message.reply_text(text=text, reply_markup=keyboard)
+        else:
             context.user_data[self.ATTRIBUTES] = {}
             text = 'Выберите параметр.'
 
             update.callback_query.answer()
             update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
-        else:
-            text = 'Отлично! Выберите другой параметр.'
-            update.message.reply_text(text=text, reply_markup=keyboard)
 
         context.user_data[self.REPEATED_START] = False
         return self.SPECIFY_ATTRIBUTE
@@ -224,3 +214,15 @@ class ProctoringBot:
                 f"{member_name} был исключён {cause_name}.",
                 parse_mode=ParseMode.HTML,
             )
+
+    @staticmethod
+    def get_inline_keyboard_markup(buttons: List[Dict[str, str]]) -> InlineKeyboardMarkup:
+        keyboards = []
+        keyboard_group = []
+        for group in buttons:
+            for key in group:
+                keyboard_group.append(InlineKeyboardButton(text=key, callback_data=str(group.get(key))))
+            keyboards.append(keyboard_group)
+            keyboard_group = []
+
+        return InlineKeyboardMarkup(keyboards)
