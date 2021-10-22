@@ -50,21 +50,26 @@ class ProctoringBot:
         self.__kick_min = kick_min
 
     def start_conversation(self, update: Update, context: CallbackContext) -> str:
-        text = (
-            'Для начала работы необходимо указать персональную информацию. '
-            'Пожалуйста, зарегистрируйтесь.'
-        )
         keyboard = ProctoringBot._get_inline_keyboard_markup([
             {'Зарегистрироваться': self.ADD_USER},
             {'Посмотреть информацию о себе': self.SHOW}
         ])
 
         if context.user_data.get(self.REPEATED_START):
+            if context.user_data.get(self.ERROR):
+                text = context.user_data[self.ERROR]
+                del context.user_data[self.ERROR]
+            else:
+                text = 'Я Вас знаю. Вы зарегистрированы.'
             update.callback_query.answer()
             update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
         else:
             update.message.reply_text(
                 'Привет! Я бот Сергей)'
+            )
+            text = (
+                'Для начала работы необходимо указать персональную информацию. '
+                'Пожалуйста, зарегистрируйтесь.'
             )
             update.message.reply_text(text=text, reply_markup=keyboard)
 
@@ -91,12 +96,12 @@ class ProctoringBot:
 
             user_info = user_data[user_id]
             text = ''
-            text += f"\nФИО: {user_info.get(self.NAME, '-')},\nГруппа: {user_info.get(self.GROUP, '-')},\n" \
+            text += f"\nФИО: {user_info.get(self.NAME, '-')}\nГруппа: {user_info.get(self.GROUP, '-')}\n" \
                     f"Подгруппа: {user_info.get(self.SUBGROUP, '-')}"
 
             return text
 
-        text_info = f"Информация:{get_info(context.user_data)}"
+        text_info = f"Информация:\n{get_info(context.user_data)}"
         keyboard = ProctoringBot._get_inline_keyboard_markup([{
             'Назад': self.END
         }])
@@ -120,12 +125,18 @@ class ProctoringBot:
 
     def select_attribute(self, update: Update, context: CallbackContext) -> str:
         user_data = context.user_data
-        keyboard = ProctoringBot._get_inline_keyboard_markup([{
-            'ФИО': self.NAME,
-            'Группа': self.GROUP,
-            'Подгруппа': self.SUBGROUP,
-            'Назад': self.END
-        }])
+        keyboard = ProctoringBot._get_inline_keyboard_markup(
+            [
+                {
+                    'ФИО': self.NAME,
+                    'Группа': self.GROUP,
+                    'Подгруппа': self.SUBGROUP
+                },
+                {
+                    'Подтвердить': self.END
+                }
+            ]
+        )
 
         if user_data.get(self.REPEATED_START):
             if user_data.get(self.ERROR):
@@ -163,8 +174,9 @@ class ProctoringBot:
 
         if user_data[self.CURRENT_ATTRIBUTE] == self.NAME and not EntryChecker.is_name_correct(text):
             user_data[self.ERROR] = 'Неверный ввод. Повторите.'
+        else:
+            user_data[self.ATTRIBUTES][user_data[self.CURRENT_ATTRIBUTE]] = text
 
-        user_data[self.ATTRIBUTES][user_data[self.CURRENT_ATTRIBUTE]] = text
         user_data[self.REPEATED_START] = True
 
         return self.select_attribute(update, context)
@@ -176,7 +188,9 @@ class ProctoringBot:
             user_data[user_id] = []
         user_data[user_id] = user_data[self.ATTRIBUTES]
 
-        user_data = context.user_data
+        if not (user_data.get(self.NAME) and user_data.get(self.GROUP) and user_data.get(self.SUBGROUP)):
+            user_data[self.ERROR] = 'Вы не были зарегистрированы, так как не всё указали о себе.'
+
         user_data[self.REPEATED_START] = True
         self.start_conversation(update, context)
 
@@ -190,13 +204,13 @@ class ProctoringBot:
     @staticmethod
     def _define_status(status, is_member) -> bool:
         return (
-            status
-            in [
-                ChatMember.MEMBER,
-                ChatMember.CREATOR,
-                ChatMember.ADMINISTRATOR,
-            ]
-            or (status == ChatMember.RESTRICTED and is_member is True)
+                status
+                in [
+                    ChatMember.MEMBER,
+                    ChatMember.CREATOR,
+                    ChatMember.ADMINISTRATOR,
+                ]
+                or (status == ChatMember.RESTRICTED and is_member is True)
         )
 
     @staticmethod
