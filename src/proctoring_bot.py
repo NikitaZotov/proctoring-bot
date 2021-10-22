@@ -47,6 +47,9 @@ class ProctoringBot:
         ERROR
     ) = map(chr, range(10, 19))
 
+    def __init__(self, kick_min):
+        self.__kick_min = kick_min
+
     def start_conversation(self, update: Update, context: CallbackContext) -> str:
         text = (
             'Для начала работы необходимо указать персональную информацию. '
@@ -223,7 +226,7 @@ class ProctoringBot:
             context.bot.ban_chat_member(job.context[self.INFO], job.context[self.USER_ID])
 
         try:
-            context.job_queue.run_once(alarm, due, context=job_context, name=job_context[self.NAME])
+            context.job_queue.run_once(alarm, due * 60, context=job_context, name=job_context[self.NAME])
         except (IndexError, ValueError):
             pass
 
@@ -231,16 +234,13 @@ class ProctoringBot:
         bot = context.bot
         url = helpers.create_deep_linked_url(bot.username, 'so-cool')
 
-        config = configparser.ConfigParser()
-        config.read('settings.ini')
-        due = int(config['Chat']['kick_min'])
-
         update.effective_chat.send_message(
             f"{member_name} был добавлен {cause_name}.",
             parse_mode=ParseMode.HTML
         )
         update.effective_chat.send_message(
-            f"Приветствуем! Пожалуйста, пройдите регистрацию в течение {EntryChecker.to_minutes_str_format(due)}.",
+            f"Приветствуем! Пожалуйста, пройдите регистрацию в течение "
+            f"{EntryChecker.to_minutes_str_format(self.__kick_min)}.",
             reply_markup=InlineKeyboardMarkup.from_button(InlineKeyboardButton(text="Пройти!", url=url))
         )
 
@@ -249,7 +249,7 @@ class ProctoringBot:
             self.USER_ID: update.chat_member.new_chat_member.user.id,
             self.INFO: update.effective_chat.id
         }
-        self._set_timer(update, context, job_context, due * 60)
+        self._set_timer(update, context, job_context, self.__kick_min)
 
     def _service_left_chat_member(self, update: Update, context: CallbackContext, member_name: str, cause_name: str):
         update.effective_chat.send_message(
