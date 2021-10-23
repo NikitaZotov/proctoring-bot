@@ -1,11 +1,12 @@
+"""
+"""
 from typing import List, Dict
 
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 class KeyboardBuilder:
-    @staticmethod
-    def get_inline_keyboard_markup(buttons: List[Dict[str, str]]) -> InlineKeyboardMarkup:
+    def get_inline_keyboard_markup(self, buttons: List[Dict[str, str]]) -> InlineKeyboardMarkup:
         keyboards = []
         keyboard_group = []
         for group in buttons:
@@ -16,6 +17,5 @@ class KeyboardBuilder:
 
         return InlineKeyboardMarkup(keyboards)
 
-    @staticmethod
-    def get_single_inline_keyboard_markup(name: str, url: str) -> InlineKeyboardMarkup:
+    def get_single_inline_keyboard_markup(self, name: str, url: str) -> InlineKeyboardMarkup:
         return InlineKeyboardMarkup.from_button(InlineKeyboardButton(name, url=url))

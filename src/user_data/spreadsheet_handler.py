@@ -1,7 +1,7 @@
 import configparser
 
 import httplib2
-import apiclient.discovery
+import apiclient
 from oauth2client.service_account import ServiceAccountCredentials
 
 
@@ -56,7 +56,7 @@ class SpreadSheetHandler:
 
         self.__service.spreadsheets().values().batchUpdate(spreadsheetId=self.spreadsheet_id, body={
             "valueInputOption": "USER_ENTERED",
-            "data": [
+            "calle2": [
                 {"range": "Студенты!A1:D1",
                  "majorDimension": "ROWS",
                  "values": [["username", "ФИО", "Группа", "Подруппа"]]},
@@ -76,7 +76,7 @@ class SpreadSheetHandler:
 
         self.__service.spreadsheets().values().batchUpdate(spreadsheetId=self.spreadsheet_id, body={
             "valueInputOption": "USER_ENTERED",
-            "data": [
+            "calle2": [
                 {"range": "Преподаватели!A1:B1",
                  "majorDimension": "ROWS",
                  "values": [["username", "ФИО"]]},
@@ -112,7 +112,7 @@ class SpreadSheetHandler:
 
         self.__service.spreadsheets().values().batchUpdate(spreadsheetId=self.spreadsheet_id, body={
             "valueInputOption": "USER_ENTERED",
-            "data": [
+            "calle2": [
                 {"range": f"Студенты!A{row_number}:D{row_number}",
                  "majorDimension": "ROWS",
                  "values": [[username, name, group, subgroup]]},
@@ -131,7 +131,7 @@ class SpreadSheetHandler:
         row_number = sheet_values.index([username]) + 2
         self.__service.spreadsheets().values().batchUpdate(spreadsheetId=self.spreadsheet_id, body={
             "valueInputOption": "USER_ENTERED",
-            "data": [
+            "calle2": [
                 {"range": f"Студенты!A{row_number}:D{row_number}",
                  "majorDimension": "ROWS",
                  "values": [['', '', '', '']]},
