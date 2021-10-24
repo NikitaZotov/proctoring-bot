@@ -8,11 +8,12 @@ class UserDataManager:
         ATTRIBUTES,
         CURRENT_ATTRIBUTE,
         USER_ID,
+        USER_ALIAS,
         CHAT_ID,
         USERNAME,
         REPEATED_START,
         ERROR
-    ) = map(chr, range(10, 17))
+    ) = map(chr, range(10, 18))
 
     def update_callback(self, user_data, value: bool):
         user_data[self.REPEATED_START] = value
@@ -30,6 +31,12 @@ class UserDataManager:
 
     def set_error(self, user_data, value):
         user_data[self.ERROR] = value
+
+    def set_user_alias(self, user_data, value):
+        user_data[self.USER_ALIAS] = value
+
+    def get_user_alias(self, user_data):
+        return user_data.get(self.USER_ALIAS)
 
     def set_user_id(self, user_data, user_id: int):
         user_data[self.USER_ID] = str(user_id)

@@ -49,14 +49,15 @@ class RegistrationExpectationCallee:
         username = self._udm.get_username(job_context)
 
         def alarm(context: CallbackContext) -> None:
-            if self._ssh.get_student_by_username(self._udm.get_username(job_context)) != {}:
+            username = self._udm.get_username(job_context)
+            if self._ssh.get_student_by_username(username) != {}:
                 update.effective_chat.send_message(
-                    text=f'{self._udm.get_username(job_context)}, '
+                    text=f'{self._udm.get_user_alias(job_context)}, '
                          f'спасибо за регистрацию!',
                     parse_mode=ParseMode.HTML)
             else:
                 update.effective_chat.send_message(
-                    text=f'{self._udm.get_username(job_context)}, '
+                    text=f'{self._udm.get_user_alias(job_context)}, '
                          f'Вы не зарегистрировались!',
                     parse_mode=ParseMode.HTML)
                 context.bot.ban_chat_member(
@@ -77,24 +78,28 @@ class RegistrationExpectationCallee:
             f"{member_name} был добавлен {cause_name}.",
             parse_mode=ParseMode.HTML
         )
-        update.effective_chat.send_message(
-            f"Привет! Пожалуйста, пройдите регистрацию в течение "
-            f"{EntryChecker.to_minutes_str_format(self._kick_min)}.",
-            reply_markup=KeyboardBuilder().get_single_inline_keyboard_markup("Пройти!", url)
-        )
 
-        user_id = update.chat_member.new_chat_member.user.id
         username = update.chat_member.new_chat_member.user.username
-        self._udm.set_user_id(user_data, user_id)
-        self._udm.set_username(user_data, member_name)
-        user_data[self._udm.get_username(user_data)] = self._udm.get_user_id(user_data)
 
-        job_context = {}
-        self._udm.set_username(job_context, member_name)
-        self._udm.set_user_id(job_context, user_id)
-        self._udm.set_chat_id(job_context, update.effective_chat.id)
+        if self._ssh.get_student_by_username(username) == {}:
+            update.effective_chat.send_message(
+                f"Привет! Пожалуйста, пройдите регистрацию в течение "
+                f"{EntryChecker.to_minutes_str_format(self._kick_min)}.",
+                reply_markup=KeyboardBuilder().get_single_inline_keyboard_markup("Пройти!", url)
+            )
 
-        self._set_timer(update, context, job_context, self._kick_min)
+            user_id = update.chat_member.new_chat_member.user.id
+            self._udm.set_user_id(user_data, user_id)
+            self._udm.set_username(user_data, member_name)
+            user_data[self._udm.get_username(user_data)] = self._udm.get_user_id(user_data)
+
+            job_context = {}
+            self._udm.set_user_alias(job_context, member_name)
+            self._udm.set_username(job_context, username)
+            self._udm.set_user_id(job_context, user_id)
+            self._udm.set_chat_id(job_context, update.effective_chat.id)
+
+            self._set_timer(update, context, job_context, self._kick_min)
 
     def _service_left_chat_member(self, update: Update, context: CallbackContext, member_name: str, cause_name: str):
         update.effective_chat.send_message(
