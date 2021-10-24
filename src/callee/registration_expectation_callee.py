@@ -9,7 +9,7 @@ from telegram.utils import helpers
 from src.data.user_data_manager import UserDataManager
 from src.callee.keyboard_builder import KeyboardBuilder
 from src.logic.entry_checker import EntryChecker
-from src.user_data.spreadsheet_handler import SpreadsheetHandler
+from src.logic.spreadsheet_handler import SpreadsheetHandler
 
 
 class RegistrationExpectationCallee:

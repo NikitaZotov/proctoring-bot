@@ -13,7 +13,7 @@ from telegram.ext import (
 from src.callee.registration_expectation_callee import RegistrationExpectationCallee
 from src.callee.registration_dialog_callee import RegistrationDialogCalle
 from src.loggers import LogInstaller
-from src.user_data.spreadsheet_handler import SpreadsheetHandler
+from src.logic.spreadsheet_handler import SpreadsheetHandler
 
 
 class ProctoringBot:

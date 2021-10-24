@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="68cc4ae6-1e0c-4b8c-827a-edeee5eeca1a" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/callee/registration_dialog_callee.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/callee/registration_dialog_callee.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/callee/registration_expectation_callee.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/callee/registration_expectation_callee.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/proctoring_bot.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/proctoring_bot.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/user_data/spreadsheet_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/spreadsheet_handler.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,6 +27,12 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/src/main.py" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/logic" />
+      <recent name="$PROJECT_DIR$/src/data" />
+    </key>
   </component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python">
@@ -91,7 +101,14 @@
       <option name="project" value="LOCAL" />
       <updated>1635075155097</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="fix(bot): improve begin conversation">
+      <created>1635101489915</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1635101489915</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -100,6 +117,7 @@
     <MESSAGE value="feat: add .idea directory" />
     <MESSAGE value="fix(bot): change register timeout text" />
     <MESSAGE value="feat(bot): improve register timeout callee" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(bot): improve register timeout callee" />
+    <MESSAGE value="fix(bot): improve begin conversation" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix(bot): improve begin conversation" />
   </component>
 </project>
