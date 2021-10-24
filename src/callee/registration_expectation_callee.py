@@ -90,7 +90,7 @@ class RegistrationExpectationCallee:
         user_data[self._udm.get_username(user_data)] = self._udm.get_user_id(user_data)
 
         job_context = {}
-        self._udm.set_username(job_context, username)
+        self._udm.set_username(job_context, member_name)
         self._udm.set_user_id(job_context, user_id)
         self._udm.set_chat_id(job_context, update.effective_chat.id)
 
