@@ -13,6 +13,7 @@ from telegram.ext import (
 from src.callee.registration_expectation_callee import RegistrationExpectationCallee
 from src.callee.registration_dialog_callee import RegistrationDialogCalle
 from src.loggers import LogInstaller
+from src.user_data.spreadsheet_handler import SpreadsheetHandler
 
 
 class ProctoringBot:
@@ -22,10 +23,14 @@ class ProctoringBot:
 
     def __init__(self, token, kick_min, s_id):
         self._logger = LogInstaller.get_default_logger(__name__, logging.INFO)
+
         self._updater = Updater(token)
         self._dispatcher = self._updater.dispatcher
-        self._rd_calle = RegistrationDialogCalle(s_id, 'spreadsheet_token.json')
-        self._re_calle = RegistrationExpectationCallee(kick_min)
+
+        ssh = SpreadsheetHandler(s_id, 'spreadsheet_token.json')
+        ssh.create_spreadsheet(100, 8)
+        self._rd_calle = RegistrationDialogCalle(ssh)
+        self._re_calle = RegistrationExpectationCallee(ssh, kick_min)
 
     def get_description_conversation_handler(self) -> ConversationHandler:
         return ConversationHandler(

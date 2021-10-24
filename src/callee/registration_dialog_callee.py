@@ -66,10 +66,8 @@ class RegistrationDialogCalle:
     ) = map(chr, range(1, 9))
     END = ConversationHandler.END
 
-    def __init__(self, s_id, file_name):
-        self._ssh = SpreadsheetHandler(s_id, file_name)
-        self._ssh.create_spreadsheet(100, 8)
-
+    def __init__(self, ssh: SpreadsheetHandler):
+        self._ssh = ssh
         self._udm = UserDataManager()
         self._rkb = RegistrationKeyboardBuilder()
 
@@ -154,7 +152,7 @@ class RegistrationDialogCalle:
         user_data = context.user_data
 
         def get_info(id_name: str) -> str:
-            user_attrs = self._udm.get_user_attrs_by_id_name(user_data, id_name)
+            user_attrs = self._ssh.get_student_by_username(id_name)
 
             if not user_attrs:
                 return '\nЭтот пользователь не зарегистрирован.'

@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 python-telegram-bot = "13.7"
 discovery = "*"
+lict = "*"
 
 [dev-packages]
 

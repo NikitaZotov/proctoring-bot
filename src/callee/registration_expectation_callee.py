@@ -9,10 +9,12 @@ from telegram.utils import helpers
 from src.data.user_data_manager import UserDataManager
 from src.callee.keyboard_builder import KeyboardBuilder
 from src.logic.entry_checker import EntryChecker
+from src.user_data.spreadsheet_handler import SpreadsheetHandler
 
 
 class RegistrationExpectationCallee:
-    def __init__(self, kick_min):
+    def __init__(self, ssh: SpreadsheetHandler, kick_min):
+        self._ssh = ssh
         self._kick_min = kick_min
         self._udm = UserDataManager()
         self._rkb = KeyboardBuilder()
@@ -20,13 +22,13 @@ class RegistrationExpectationCallee:
     @staticmethod
     def _define_status(status, is_member) -> bool:
         return (
-                status
-                in [
-                    ChatMember.MEMBER,
-                    ChatMember.CREATOR,
-                    ChatMember.ADMINISTRATOR,
-                ]
-                or (status == ChatMember.RESTRICTED and is_member is True)
+            status
+            in [
+                ChatMember.MEMBER,
+                ChatMember.CREATOR,
+                ChatMember.ADMINISTRATOR,
+            ]
+            or (status == ChatMember.RESTRICTED and is_member is True)
         )
 
     @staticmethod
@@ -47,13 +49,19 @@ class RegistrationExpectationCallee:
         username = self._udm.get_username(job_context)
 
         def alarm(context: CallbackContext) -> None:
-            update.effective_chat.send_message(
-                text=f'{username}, '
-                     f'Вы не зарегистрировались!',
-                parse_mode=ParseMode.HTML)
-            context.bot.ban_chat_member(
-                self._udm.get_chat_id(job_context), self._udm.get_user_id(job_context)
-            )
+            if self._ssh.get_student_by_username(self._udm.get_username(job_context)) != {}:
+                update.effective_chat.send_message(
+                    text=f'{self._udm.get_username(job_context)}, '
+                         f'спасибо за регистрацию!',
+                    parse_mode=ParseMode.HTML)
+            else:
+                update.effective_chat.send_message(
+                    text=f'{self._udm.get_username(job_context)}, '
+                         f'Вы не зарегистрировались!',
+                    parse_mode=ParseMode.HTML)
+                context.bot.ban_chat_member(
+                    self._udm.get_chat_id(job_context), self._udm.get_user_id(job_context)
+                )
 
         try:
             context.job_queue.run_once(alarm, due * 60, context=job_context, name=username)

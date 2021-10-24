@@ -148,19 +148,24 @@ class SpreadsheetHandler:
         sheet_values = results['valueRanges'][0]['values']
         return sheet_values
 
-    def get_student_by_username(self, username: str) -> list:
+    def get_student_by_username(self, username: str) -> dict:
         results = self._service.spreadsheets().values().batchGet(
             spreadsheetId=self._spreadsheet_id,
             ranges=['Студенты!A2:D100'],
             valueRenderOption='FORMATTED_VALUE',
             dateTimeRenderOption='FORMATTED_STRING'
         ).execute()
-        sheet_values = results['valueRanges'][0]['values']
 
-        user = []
+        if results['valueRanges'][0].get('values'):
+            sheet_values = results['valueRanges'][0]['values']
+        else:
+            return {}
+
+        user = {}
         for user_row in sheet_values:
             for user_name in user_row:
                 if user_name == username:
-                    user = user_row
-
+                    user['ФИО'] = user_row[1]
+                    user['Группа'] = user_row[2]
+                    user['Подгруппа'] = user_row[3]
         return user
