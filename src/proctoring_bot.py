@@ -1,5 +1,7 @@
 """
 """
+import logging
+
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -10,6 +12,7 @@ from telegram.ext import (
 
 from src.callee.registration_expectation_callee import RegistrationExpectationCallee
 from src.callee.registration_dialog_callee import RegistrationDialogCalle
+from src.loggers import LogInstaller
 
 
 class ProctoringBot:
@@ -18,9 +21,10 @@ class ProctoringBot:
     INFO = 'info'
 
     def __init__(self, token, kick_min, s_id):
+        self._logger = LogInstaller.get_default_logger(__name__, logging.INFO)
         self._updater = Updater(token)
         self._dispatcher = self._updater.dispatcher
-        self._rd_calle = RegistrationDialogCalle()
+        self._rd_calle = RegistrationDialogCalle(s_id, 'spreadsheet_token.json')
         self._re_calle = RegistrationExpectationCallee(kick_min)
 
     def get_description_conversation_handler(self) -> ConversationHandler:
@@ -28,7 +32,7 @@ class ProctoringBot:
             entry_points=[
                 CallbackQueryHandler(
                     callback=self._rd_calle.select_attribute,
-                    pattern='^' + str(self._rd_calle.SPECIFY_ATTRIBUTE) + '$'
+                    pattern='^' + str(self._rd_calle.SELECT_ATTRIBUTE) + '$'
                 )
             ],
             states={
@@ -65,17 +69,13 @@ class ProctoringBot:
         return ChatMemberHandler(self._re_calle.greet_chat_members, ChatMemberHandler.CHAT_MEMBER)
 
     def get_main_conversation_handler(self) -> ConversationHandler:
-        selection_handlers = [
-            CallbackQueryHandler(
-                callback=self._rd_calle.show_user_info,
-                pattern='^' + str(self._rd_calle.SHOW) + '$'
-            ),
-            CallbackQueryHandler(
-                callback=self._rd_calle.add_user,
-                pattern='^' + str(self._rd_calle.ADD_USER) + '$'),
-        ]
         return ConversationHandler(
-            entry_points=[CommandHandler(self.START, self._rd_calle.start_conversation)],
+            entry_points=[
+                CommandHandler(
+                    command=self.START,
+                    callback=self._rd_calle.start_conversation
+                )
+            ],
             states={
                 self._rd_calle.SHOW: [
                     CallbackQueryHandler(
@@ -83,7 +83,16 @@ class ProctoringBot:
                         pattern='^' + str(self._rd_calle.END) + '$'
                     )
                 ],
-                self._rd_calle.SELECT_ACTION: selection_handlers,
+                self._rd_calle.SELECT_ACTION: [
+                    CallbackQueryHandler(
+                        callback=self._rd_calle.show_user_info,
+                        pattern='^' + str(self._rd_calle.SHOW) + '$'
+                    ),
+                    CallbackQueryHandler(
+                        callback=self._rd_calle.add_user,
+                        pattern='^' + str(self._rd_calle.ADD_USER) + '$'
+                    )
+                ],
                 self._rd_calle.DESCRIBE_USER: [self.get_description_conversation_handler()],
                 self._rd_calle.STOP: [
                     CommandHandler(

@@ -6,6 +6,7 @@ from telegram.ext import CallbackContext, ConversationHandler
 from src.callee.keyboard_builder import KeyboardBuilder
 from src.logic.entry_checker import EntryChecker
 from src.data.user_data_manager import UserDataManager
+from src.user_data.spreadsheet_handler import SpreadsheetHandler
 
 
 class RegistrationKeyboardBuilder(KeyboardBuilder):
@@ -50,6 +51,7 @@ class RegistrationKeyboardBuilder(KeyboardBuilder):
             }
         ])
 
+
 class RegistrationDialogCalle:
     # states
     (
@@ -64,36 +66,45 @@ class RegistrationDialogCalle:
     ) = map(chr, range(1, 9))
     END = ConversationHandler.END
 
-    def __init__(self, s_id):
-        self._s_id = s_id
+    def __init__(self, s_id, file_name):
+        self._ssh = SpreadsheetHandler(s_id, file_name)
+        self._ssh.create_spreadsheet(100, 8)
+
         self._udm = UserDataManager()
         self._rkb = RegistrationKeyboardBuilder()
 
     def start_conversation(self, update: Update, context: CallbackContext) -> str:
         bot_data = context.bot_data
+        reg_text = 'Вы зарегистрированы.'
+        reg_keyboard = self._rkb.get_primary_keyboard_if_registered()
 
         if self._udm.is_updated_callback(bot_data):
             if self._udm.is_error_occurred(bot_data):
                 text = self._udm.get_error(bot_data)
             else:
-                text = 'Вы зарегистрированы.'
+                text = reg_text
             update.callback_query.answer()
             update.callback_query.edit_message_text(
-                text=text, reply_markup=self._rkb.get_primary_keyboard_if_registered()
+                text=text, reply_markup=reg_keyboard
             )
         else:
             update.message.reply_text(
                 'Привет! Я бот Сергей)'
             )
-            text = (
-                'Для начала работы необходимо указать персональную информацию. '
-                'Пожалуйста, зарегистрируйтесь.'
-            )
-            update.message.reply_text(
-                text=text, reply_markup=self._rkb.get_primary_keyboard_if_not_registered()
-            )
+            if not False: #self._ssh.get_student_by_username(update.message.from_user.username):
+                text = (
+                    'Для начала работы необходимо указать персональную информацию. '
+                    'Пожалуйста, зарегистрируйтесь.'
+                )
+                update.message.reply_text(
+                    text=text, reply_markup=self._rkb.get_primary_keyboard_if_not_registered()
+                )
+            else:
+                update.message.reply_text(
+                    text=reg_text, reply_markup=reg_keyboard
+                )
 
-        self._udm.update_callback(bot_data, True)
+        self._udm.update_callback(bot_data, False)
         return self.SELECT_ACTION
 
     def _get_info_request_text(self):
@@ -136,7 +147,7 @@ class RegistrationDialogCalle:
             text=text_info, reply_markup=self._rkb.get_ok_request_keyboard()
         )
 
-        self._udm.update_callback(user_data, True)
+        self._udm.update_callback(context.bot_data, True)
         return self.SHOW
 
     def show_concrete_user_info(self, update: Update, context: CallbackContext) -> str:
@@ -169,25 +180,26 @@ class RegistrationDialogCalle:
 
     def select_attribute(self, update: Update, context: CallbackContext) -> str:
         user_data = context.user_data
+        bot_data = context.bot_data
         keyboard = self._rkb.get_select_attribute_keyboard()
 
-        if self._udm.is_updated_callback(user_data):
-            if self._udm.is_error_occurred(user_data):
-                text = self._udm.get_error(user_data)
+        if self._udm.is_updated_callback(bot_data):
+            if self._udm.is_error_occurred(bot_data):
+                text = self._udm.get_error(bot_data)
             else:
                 text = 'Отлично! Выберите другой параметр.'
             update.message.reply_text(text=text, reply_markup=keyboard)
         else:
             self._udm.set_user_attrs(user_data, {})
-            if self._udm.is_error_occurred(user_data):
-                text = self._udm.get_error(user_data)
+            if self._udm.is_error_occurred(bot_data):
+                text = self._udm.get_error(bot_data)
             else:
                 text = 'Выберите параметр.'
 
             update.callback_query.answer()
             update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
 
-        self._udm.update_callback(user_data, False)
+        self._udm.update_callback(bot_data, False)
         return self.SPECIFY_ATTRIBUTE
 
     def request_attribute(self, update: Update, context: CallbackContext) -> str:
@@ -201,29 +213,34 @@ class RegistrationDialogCalle:
 
     def save_attribute(self, update: Update, context: CallbackContext) -> str:
         user_data = context.user_data
+        bot_data = context.bot_data
         text = update.message.text
 
         if self._udm.get_cur_user_attr_key(user_data) == self._rkb.FULL_NAME \
                 and not EntryChecker.is_name_correct(text):
-            self._udm.set_error(user_data, 'Данные не корректны. Повторите.')
+            self._udm.set_error(bot_data, 'Данные не корректны. Повторите.')
         else:
             self._udm.set_cur_user_attr(user_data, text)
 
-        self._udm.update_callback(user_data, True)
+        self._udm.update_callback(bot_data, True)
         return self.select_attribute(update, context)
 
     def end_describing(self, update: Update, context: CallbackContext) -> int:
         user_data = context.user_data
-        user_id = self._udm.get_user_id(user_data)
-        if user_id:
-            self._udm.set_user(user_data, self._udm.get_user_attrs(user_data))
+        bot_data = context.bot_data
+        user_attrs = self._udm.get_user_attrs(user_data)
+        self._udm.set_user(user_data, user_attrs)
 
-        if not (user_data.get(self._rkb.FULL_NAME)
-                and user_data.get(self._rkb.GROUP)
-                and user_data.get(self._rkb.SUBGROUP)):
-            self._udm.set_error(user_data, 'Вы не были зарегистрированы, так как не всё рассказали о себе.')
+        full_name = user_attrs.get(self._rkb.FULL_NAME)
+        group = user_attrs.get(self._rkb.GROUP)
+        subgroup = user_attrs.get(self._rkb.SUBGROUP)
 
-        self._udm.update_callback(user_data, True)
+        if not full_name or not group or not subgroup:
+            self._udm.set_error(bot_data, 'Вы не были зарегистрированы, так как не всё рассказали о себе.')
+        else:
+            self._ssh.add_student(self._udm.get_username(user_data), full_name, group, subgroup)
+
+        self._udm.update_callback(bot_data, True)
         self.start_conversation(update, context)
 
         return self.END
