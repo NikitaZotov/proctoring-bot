@@ -76,7 +76,7 @@ class RegistrationDialogCalle:
         reg_text = 'Вы зарегистрированы.'
         reg_keyboard = self._rkb.get_primary_keyboard_if_registered()
 
-        if self._udm.is_updated_callback(bot_data):
+        if self._udm.is_updated_callback(bot_data) and update.callback_query:
             if self._udm.is_error_occurred(bot_data):
                 text = self._udm.get_error(bot_data)
             else:
@@ -87,9 +87,9 @@ class RegistrationDialogCalle:
             )
         else:
             update.message.reply_text(
-                'Привет! Я бот Сергей)'
+                'Привет! Я бот Роман.'
             )
-            if not False: #self._ssh.get_student_by_username(update.message.from_user.username):
+            if self._ssh.get_student_by_username(update.message.from_user.username) == {}:
                 text = (
                     'Для начала работы необходимо указать персональную информацию. '
                     'Пожалуйста, зарегистрируйтесь.'
