@@ -104,6 +104,11 @@ class SpreadsheetHandler:
 
         row_number = len(sheet_values) + 1
 
+        for user in sheet_values:
+            if user[0] == username:
+                row_number = sheet_values.index([username]) + 1
+                break
+
         self._service.spreadsheets().values().batchUpdate(
             spreadsheetId=self._spreadsheet_id,
             body={
