@@ -25,7 +25,6 @@ class RegistrationKeyboardBuilder(KeyboardBuilder):
 
     def get_primary_keyboard_if_registered(self):
         return self.get_inline_keyboard_markup([
-            {'Изменить данные о себе': RegistrationDialogCalle.ADD_USER},
             {'Посмотреть личную информацию': RegistrationDialogCalle.SHOW}
         ])
 
@@ -74,7 +73,12 @@ class RegistrationDialogCalle:
     def start_conversation(self, update: Update, context: CallbackContext) -> str:
         bot_data = context.bot_data
         reg_text = 'Вы зарегистрированы.'
-        reg_keyboard = self._rkb.get_primary_keyboard_if_registered()
+
+        user = self._ssh.get_student_by_username(update.effective_user.username)
+        if user == {}:
+            keyboard = self._rkb.get_primary_keyboard_if_not_registered()
+        else:
+            keyboard = self._rkb.get_primary_keyboard_if_registered()
 
         if self._udm.is_updated_callback(bot_data) and update.callback_query:
             if self._udm.is_error_occurred(bot_data):
@@ -83,24 +87,20 @@ class RegistrationDialogCalle:
                 text = reg_text
             update.callback_query.answer()
             update.callback_query.edit_message_text(
-                text=text, reply_markup=reg_keyboard
+                text=text, reply_markup=keyboard
             )
         else:
-            update.message.reply_text(
-                'Привет! Я бот Роман.'
-            )
-            if self._ssh.get_student_by_username(update.message.from_user.username) == {}:
+            if user == {}:
+                update.message.reply_text('Привет! Я бот Роман.')
                 text = (
                     'Для начала работы необходимо указать персональную информацию. '
                     'Пожалуйста, зарегистрируйтесь.'
                 )
-                update.message.reply_text(
-                    text=text, reply_markup=self._rkb.get_primary_keyboard_if_not_registered()
-                )
             else:
-                update.message.reply_text(
-                    text=reg_text, reply_markup=reg_keyboard
-                )
+                text = reg_text
+            update.message.reply_text(
+                text=text, reply_markup=keyboard
+            )
 
         self._udm.update_callback(bot_data, False)
         return self.SELECT_ACTION
@@ -223,7 +223,7 @@ class RegistrationDialogCalle:
         self._udm.update_callback(bot_data, True)
         return self.select_attribute(update, context)
 
-    def end_describing(self, update: Update, context: CallbackContext) -> int:
+    def end_describing(self, update: Update, context: CallbackContext) -> str:
         user_data = context.user_data
         bot_data = context.bot_data
         user_attrs = self._udm.get_user_attrs(user_data)
