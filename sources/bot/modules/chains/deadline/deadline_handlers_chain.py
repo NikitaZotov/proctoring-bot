@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import (
@@ -8,7 +10,9 @@ from aiogram.dispatcher.filters.state import (
 from ....loggers import LogInstaller
 from ...handlers_chain import HandlersChain
 from ...handlers_registrar import HandlersRegistrar as Registrar
+from ....storage.spreadsheet.auth.auth_spreadsheet_handler import AuthSpreadsheetHandler
 from ....storage.spreadsheet.deadline.deadline_spreadsheet_handler import DeadlineSpreadsheetHandler
+from ....storage.spreadsheet.util.spreadsheet_config import SpreadsheetConfig
 
 
 class DeadlineStates(StatesGroup):
@@ -25,10 +29,39 @@ class DeadlineHandlersChain(HandlersChain):
         deadlines = await DeadlineHandlersChain._get_user_deadlines()
 
         if deadlines:
-            deadline_message = DeadlineHandlersChain._format_deadlines(deadlines)
+            deadline_message = DeadlineHandlersChain._current_deadlines(deadlines)
             await message.answer(deadline_message)
         else:
             await message.answer("На данный момент нет активных дедлайнов.")
+
+        await state.finish()
+
+    @staticmethod
+    @Registrar.message_handler(commands=["notification"], state="*")
+    async def deadline_start_handler(message: types.Message, state: FSMContext):
+        DeadlineHandlersChain._logger.debug(f"Start deadline conversation state")
+        usernames = await DeadlineHandlersChain._get_usernames()
+        usernames = [username[0] for username in usernames]
+        deadlines = await DeadlineHandlersChain._get_user_deadlines()
+
+        failed_deadlines = []
+        today_deadlines = []
+        for deadline in deadlines:
+            date_object = datetime.strptime(deadline["deadline"], "%d.%m.%Y").date()
+            if date_object < datetime.now().date():
+                failed_deadlines.append(deadline)
+            elif date_object == datetime.now().date():
+                today_deadlines.append(deadline)
+        # return formatted_deadlines
+        message.bot.
+
+        # deadlines = [deadline['deadline'] for deadline in deadlines]
+
+        if usernames:
+            await message.answer(DeadlineHandlersChain._failed_deadlines(failed_deadlines))
+            await message.answer(DeadlineHandlersChain._today_deadlines(today_deadlines))
+        else:
+            await message.answer("На данный момент нет студентов.")
 
         await state.finish()
 
@@ -40,7 +73,7 @@ class DeadlineHandlersChain(HandlersChain):
         deadlines = await DeadlineHandlersChain._get_user_deadlines()
         if deadlines:
 
-            deadline_message = DeadlineHandlersChain._format_deadlines(deadlines)
+            deadline_message = DeadlineHandlersChain._current_deadlines(deadlines)
             await Registrar.bot.send_message(query.from_user.id, deadline_message)
         else:
             await Registrar.bot.send_message(query.from_user.id, "На данный момент нет активных дедлайнов.")
@@ -51,8 +84,9 @@ class DeadlineHandlersChain(HandlersChain):
     async def _get_user_deadlines():
         try:
             deadline_handler = DeadlineSpreadsheetHandler(
-                spreadsheet_id='1R8PFRfrb8NRjyCQMZLExXvNEoA8_xvDTACvmdExO70U',
-                file_name='./sources/tokens/works_token.json'
+                spreadsheet_id='',
+                file_name='',
+                config_class=SpreadsheetConfig
             )
 
             deadlines = deadline_handler.get_deadlines()
@@ -74,9 +108,43 @@ class DeadlineHandlersChain(HandlersChain):
             return []
 
     @staticmethod
-    def _format_deadlines(deadlines):
-        message = "Ваши текущие дедлайны:\n\n"
+    async def _get_usernames():
+        # try:
+        auth = AuthSpreadsheetHandler(
+            spreadsheet_id='',
+            file_name='',
+            config_class=SpreadsheetConfig
+        )
 
+        usernames = auth.get_student_usernames()
+
+        return usernames
+
+        # except Exception as e:
+        #     DeadlineHandlersChain._logger.error(f"Error getting usernames: {e}")
+        #     return []
+
+    @staticmethod
+    def _today_deadlines(deadlines):
+        message = "Сегодня срок для сдачи этих лабораторных работ:\n\n"
+        message += DeadlineHandlersChain._format_deadlines(deadlines)
+        return message
+
+    @staticmethod
+    def _failed_deadlines(deadlines):
+        message = "Срок сдачи этих лабораторных работ уже прошёл:\n\n"
+        message += DeadlineHandlersChain._format_deadlines(deadlines)
+        return message
+
+    @staticmethod
+    def _current_deadlines(deadlines):
+        message = "Ваши текущие дедлайны:\n\n"
+        message += DeadlineHandlersChain._format_deadlines(deadlines)
+        return message
+
+    @staticmethod
+    def _format_deadlines(deadlines):
+        message = ""
         for deadline in deadlines:
             message += (
                 f"Дисциплина: {deadline['discipline']}\n"
@@ -102,8 +170,9 @@ class DeadlineHandlersChain(HandlersChain):
         DeadlineHandlersChain._logger.debug(f"User @{message.from_user.username} entered discipline: {discipline_name}")
 
         spreadsheet_handler = DeadlineSpreadsheetHandler(
-            spreadsheet_id='1R8PFRfrb8NRjyCQMZLExXvNEoA8_xvDTACvmdExO70U',
-            file_name='./sources/tokens/works_token.json'
+            spreadsheet_id='',
+            file_name='',
+            config_class=SpreadsheetConfig,
         )
 
         deadlines = spreadsheet_handler.get_deadline(discipline_name=discipline_name)
