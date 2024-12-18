@@ -1,5 +1,3 @@
-from typing import List
-
 import validators
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -102,6 +100,8 @@ class SurveyTeacherHandlersChain(HandlersChain):
     async def cancel_survey_handler(query: types.CallbackQuery, state: FSMContext):
         await query.message.edit_text("Отправка опроса отменена")
         await state.reset_state()
+        username = query.message.from_user.username
+        await state.update_data(username=username)
 
     @staticmethod
     async def _check_test(data, message):
