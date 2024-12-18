@@ -8,6 +8,7 @@ from .base_spreadsheet_storage import BaseSpreadsheetStorage
 from .spreadsheet.auth.base_auth_spreadsheet_handler import BaseAuthSpreadsheetHandler
 from .spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
 from .spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
+from .spreadsheet.deadline.base_deadline_spreadsheet_handler import BaseDeadlineSpreadsheetHandler
 
 
 class SpreadsheetStorage(BaseSpreadsheetStorage):
@@ -20,6 +21,7 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
         self._auth_handler = None
         self._works_handler = None
         self._tests_handler = None
+        self._deadline_handler = None
 
     def resolve_address(self, chat, user):
         chat_id, user_id = map(str, self.check_address(chat=chat, user=user))
@@ -84,6 +86,7 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
         auth_data = user_data.get("auth")
         works_data = user_data.get("works")
         tests_data = user_data.get("tests")
+        deadlines_data = user_data.get("deadlines")
 
         if auth_data is not None:
             if auth_data.get("name") and auth_data.get("group") and auth_data.get("subgroup"):
@@ -98,6 +101,10 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
             if user_type == "student" and tests_data.get("is_finished"):
                 await self._write_answers(tests_data, auth_data)
 
+        if deadlines_data is not None:
+            await self._get_deadlines()
+
+
     async def _write_answers(self, tests_data, auth_data):
         tests_handler: BaseTestsSpreadsheetHandler = self._tests_handler
         tests_handler.add_result_to_worksheet(tests_data["test_name"], auth_data["name"], tests_data["answers"])
@@ -111,6 +118,16 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
             tests_data["test_name"] = test_name
             # needs to be changed to ids instead of usernames
             tests_data["students"] = auth_handler.get_student_usernames()
+
+    async def _get_deadlines(self, *, chat=None, user=None):
+        chat, user = self.resolve_address(chat=chat, user=user)
+        user_data = self.data[chat][user]["data"]
+
+        if user_data.get("deadlines", {}).get("deadlines") is None:
+            await self._update_table(user_data)
+
+        return user_data.get("deadlines", {}).get("deadlines", [])
+
 
     async def _register_work(self, username, works_data, auth_data):
         works_handler: BaseWorksSpreadsheetHandler = self._works_handler
@@ -141,3 +158,6 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
 
     def visit_tests_handler(self, tests_handler: BaseTestsSpreadsheetHandler):
         self._tests_handler = tests_handler
+
+    def visit_deadline_handler(self, deadline_handler: BaseDeadlineSpreadsheetHandler):
+        self._deadline_handler = deadline_handler
