@@ -23,10 +23,13 @@ wheels/
 pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
+/sources/tokens/generated/
+/sources/tokens/*.json
 .installed.cfg
 *.egg
 MANIFEST
 */settings.ini
+*/spreadsheet.ini.generated
 */*.json
 
 # PyInstaller
