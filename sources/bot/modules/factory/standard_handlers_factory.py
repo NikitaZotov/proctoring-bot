@@ -9,6 +9,7 @@ from ...modules.chains.main.main_handlers_chain import MainHandlersChain
 from ...modules.chains.work.work_handlers_chain import WorkHandlersChain
 from ...modules.chains.survey.student_handlers_chain import StudentHandlersChain
 from ...modules.chains.survey.teacher_handlers_chain import SurveyTeacherHandlersChain
+from ...modules.chains.config.config_handlers_chain import ConfigHandlersChain
 from ...state_machine import StateMachine
 from ...modules.factory.handlers_factory import HandlersFactory
 
@@ -29,6 +30,7 @@ class StandardHandlersFactory(HandlersFactory):
                     WorkHandlersChain,
                     StudentHandlersChain,
                     SurveyTeacherHandlersChain,
+                    ConfigHandlersChain,
                 ]
             )
         except TypeError as error:
