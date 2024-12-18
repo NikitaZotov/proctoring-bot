@@ -45,7 +45,7 @@ class SpreadsheetHandler:
             },
         ).execute()
 
-    def create_spreadsheet(self, spreadsheet_title: str, default_sheet_title=None):
+    def create_spreadsheet(self, spreadsheet_title: str, default_sheet_title=None) -> str:
         """
         Creates spreadsheet with title with ability to define first sheet title.
 
@@ -82,11 +82,12 @@ class SpreadsheetHandler:
         print(f"Created new spreadsheet at https://docs.google.com/spreadsheets/d/{self._spreadsheet_id}/edit#gid=0")
 
         self._get_permissions()
+        return self._spreadsheet_id
 
-    def _get_permissions(self) -> None:
+    def _get_permissions(self, role:str="reader") -> None:
         drive_service = apiclient.discovery.build("drive", "v3", http=self._http_auth)
         drive_service.permissions().create(
-            fileId=self._spreadsheet_id, body={"type": "anyone", "role": "reader"}, fields="id"
+            fileId=self._spreadsheet_id, body={"type": "anyone", "role": role}, fields="id"
         ).execute()
 
     def get_sheet_values(self, sheet_title: str, corner_from: str, corner_to: str):
@@ -134,7 +135,10 @@ class SpreadsheetHandler:
         """
         first_row_element = row[0]
         results = self._get_first_column_range_values(sheet_title)
-        sheet_values = results["valueRanges"][0]["values"]
+        try:
+            sheet_values = results["valueRanges"][0]["values"]
+        except (KeyError, IndexError):
+            sheet_values = []
         row_number = len(sheet_values) + 1
 
         for sheet_rows in sheet_values:
