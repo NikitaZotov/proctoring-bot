@@ -2,8 +2,10 @@
 Spreadsheet storage factory implementation module.
 """
 from ..base_spreadsheet_storage import BaseSpreadsheetStorage
+from ..spreadsheet.spreadsheet_creation_handler import SpreadsheetCreationHandler
 from ..spreadsheet.auth.auth_spreadsheet_handler import AuthSpreadsheetHandler
 from ..spreadsheet.auth.base_auth_spreadsheet_handler import BaseAuthSpreadsheetHandler
+from ..spreadsheet.base_spreadsheet_handler import BaseSpreadsheetHandler
 from ..spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
 from ..spreadsheet.tests.tests_spreadsheet_handler import TestsSpreadsheetHandler
 from ..spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
@@ -30,6 +32,11 @@ class SpreadsheetStorageFactory(StorageFactory):
     def init_works_handler(spreadsheet_id, token_file_name) -> BaseWorksSpreadsheetHandler:
         works_handler = WorksSpreadsheetHandler(spreadsheet_id, token_file_name)
         return works_handler
+
+    @staticmethod
+    def init_spreadsheet_creation_handler(token_file_name, spreadsheet_id="") -> BaseSpreadsheetHandler:
+        spreadsheet_creation_handler = SpreadsheetCreationHandler(spreadsheet_id, token_file_name,)
+        return spreadsheet_creation_handler
 
     @staticmethod
     def init_tests_handler(token_file_name) -> BaseTestsSpreadsheetHandler:

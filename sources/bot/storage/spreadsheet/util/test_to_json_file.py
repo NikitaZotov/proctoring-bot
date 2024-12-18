@@ -1,11 +1,12 @@
 import json
 import os
 import sys
+from typing import List
 
 
 class JsonTestFileUtil:
     @staticmethod
-    def save_test(test_name: str, test: list[dict]) -> None:
+    def save_test(test_name: str, test: List[dict]) -> None:
         if not test_name == "":
             current_path = os.path.dirname(sys.argv[0])  # needs to be configured in config.ini
             path = f"{current_path}\\surveys"

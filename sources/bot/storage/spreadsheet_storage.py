@@ -5,7 +5,9 @@ import copy
 from typing import Dict
 
 from .base_spreadsheet_storage import BaseSpreadsheetStorage
+from .spreadsheet.spreadsheet_creation_handler import SpreadsheetCreationHandler
 from .spreadsheet.auth.base_auth_spreadsheet_handler import BaseAuthSpreadsheetHandler
+from .spreadsheet.base_spreadsheet_handler import BaseSpreadsheetHandler
 from .spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
 from .spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
 
@@ -19,6 +21,7 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
         super().__init__()
         self._auth_handler = None
         self._works_handler = None
+        self._spreadsheet_handler = None
         self._tests_handler = None
 
     def resolve_address(self, chat, user):
@@ -47,12 +50,19 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
 
         return copy.deepcopy(user_data)
 
+    async def create_spreadsheet(self, title, sheet_data, viewing_mode):
+        spreadsheet_handler : SpreadsheetCreationHandler = self._spreadsheet_handler
+        spreadsheet_handler.set_attributes(sheet_data, viewing_mode)
+        spreadsheet_id =  spreadsheet_handler.create_spreadsheet(title)
+
+        return spreadsheet_id
+
     async def _upload_register_data(self, user_data):
         auth_handler: BaseAuthSpreadsheetHandler = self._auth_handler
         username = user_data.get("username")
         auth_data = user_data.get("auth")
 
-        if auth_data == {}:
+        if auth_data == {} or auth_data is None:
             student = auth_handler.get_student_by_username(username)
             teacher = auth_handler.get_teacher_by_username(username)
 
@@ -138,6 +148,9 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
 
     def visit_works_handler(self, works_handler: BaseWorksSpreadsheetHandler):
         self._works_handler = works_handler
+
+    def visit_spreadsheet_creation_handler(self, spreadsheet_creation_handler: BaseSpreadsheetHandler):
+        self._spreadsheet_handler = spreadsheet_creation_handler
 
     def visit_tests_handler(self, tests_handler: BaseTestsSpreadsheetHandler):
         self._tests_handler = tests_handler

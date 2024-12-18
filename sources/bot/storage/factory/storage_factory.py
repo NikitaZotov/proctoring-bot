@@ -5,6 +5,7 @@ from abc import ABCMeta, abstractmethod
 
 from ..base_spreadsheet_storage import BaseSpreadsheetStorage
 from ..spreadsheet.auth.base_auth_spreadsheet_handler import BaseAuthSpreadsheetHandler
+from ..spreadsheet.base_spreadsheet_handler import BaseSpreadsheetHandler
 from ..spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
 from ..spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
 
@@ -59,6 +60,25 @@ class StorageFactory:
         :rtype: :obj:`BaseWorksSpreadsheetHandler`
         """
         raise NotImplementedError
+
+
+    @staticmethod
+    @abstractmethod
+    def init_spreadsheet_creation_handler(spreadsheet_id: str, token_file_name: str) -> BaseSpreadsheetHandler:
+        """
+        Creates spreadsheet_creation handler.
+
+        :param spreadsheet_id: Spreadsheet unique id
+        :type spreadsheet_id: :obj:`str`
+
+        :param token_file_name: Spreadsheet token file name
+        :type token_file_name: :obj:`str`
+
+        :return: Returns spreadsheet_creation handler
+        :rtype: :obj:`BaseSpreadsheetHandler`
+        """
+        raise NotImplementedError
+
 
     @staticmethod
     @abstractmethod

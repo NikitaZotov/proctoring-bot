@@ -1,13 +1,19 @@
 from datetime import datetime
+from typing import List, Tuple
 
 import apiclient
 import httplib2
 from googleapiclient.errors import HttpError
 from oauth2client.service_account import ServiceAccountCredentials
 
-from .base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
-from ..spreadsheet_handler import SpreadsheetHandler
-from ..util.test_to_json_file import JsonTestFileUtil
+from sources.bot.storage.spreadsheet.spreadsheet_handler import SpreadsheetHandler
+from sources.bot.storage.spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
+from sources.bot.storage.spreadsheet.util.test_to_json_file import JsonTestFileUtil
+
+
+# from .base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
+# from ..spreadsheet_handler import SpreadsheetHandler
+# from ..util.test_to_json_file import JsonTestFileUtil
 
 
 class TestsSpreadsheetHandler(BaseTestsSpreadsheetHandler):
@@ -26,7 +32,7 @@ class TestsSpreadsheetHandler(BaseTestsSpreadsheetHandler):
         self._handler = SpreadsheetHandler(spreadsheet_id, self._credentials_file_name)
         return self._get_test()
 
-    def _get_test(self) -> tuple[str, list[dict]]:
+    def _get_test(self) -> Tuple[str, List[dict]]:
         try:
             test_name = self._handler.get_spreadsheet_page_names()[0]
             sheet_data = self._handler.get_sheet_values(test_name, "A1", "Z1000")
