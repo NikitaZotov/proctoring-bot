@@ -317,9 +317,6 @@ class MainHandlersChain(HandlersChain):
         :type state: :obj:`FSMContext`
         """
         username = message.text.strip()
-        #spreadsheet_handler = BaseAuthSpreadsheetHandler()
-        #student_info = spreadsheet_handler.get_student_by_username(username)
-        #current_name = student_info.get("name")
         await state.update_data(username_to_change=username)
         await message.answer(f"Студент с ником @{username} найден. Введите новое ФИО для студента:")
         await state.set_state(MainStates.CHANGE_NAME_NEW_NAME)
