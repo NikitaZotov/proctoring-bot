@@ -247,11 +247,8 @@ class MainHandlersChain(HandlersChain):
                 fio = student_info.get("name", "Не указано")
                 students_list.append(f"{username} - {fio}")
 
-            # Преобразуем список в строку и отправляем пользователю
             students_text = "\n".join(students_list)
             await message.answer(f"Список всех студентов:\n{students_text}")
-
-            # Просим пользователя ввести ник студента
             await message.answer("Введите ник студента, имя которого нужно изменить:")
             await state.set_state(MainStates.CHANGE_NAME_USERNAME)
 
