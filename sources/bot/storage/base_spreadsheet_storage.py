@@ -6,6 +6,7 @@ from abc import abstractmethod, ABCMeta
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from .spreadsheet.auth.base_auth_spreadsheet_handler import BaseAuthSpreadsheetHandler
+from .spreadsheet.deadline.base_deadline_spreadsheet_handler import BaseDeadlineSpreadsheetHandler
 from .spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
 from .spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
 
@@ -45,4 +46,9 @@ class BaseSpreadsheetStorage(MemoryStorage):
         :param tests_handler: Student tests managing spreadsheet handler instance
         :type tests_handler: :obj:`BaseTestsSpreadsheetHandler`
         """
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_deadline_handler(self, labs_handler: BaseDeadlineSpreadsheetHandler):
+
         raise NotImplementedError

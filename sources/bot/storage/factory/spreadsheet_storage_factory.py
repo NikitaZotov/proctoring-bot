@@ -8,6 +8,8 @@ from ..spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsh
 from ..spreadsheet.tests.tests_spreadsheet_handler import TestsSpreadsheetHandler
 from ..spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
 from ..spreadsheet.works.works_spreadsheet_handler import WorksSpreadsheetHandler
+from ..spreadsheet.deadline.base_deadline_spreadsheet_handler import BaseDeadlineSpreadsheetHandler
+from ..spreadsheet.deadline.deadline_spreadsheet_handler import DeadlineSpreadsheetHandler
 from ..spreadsheet_storage import SpreadsheetStorage
 from ..factory.storage_factory import StorageFactory
 
@@ -35,3 +37,8 @@ class SpreadsheetStorageFactory(StorageFactory):
     def init_tests_handler(token_file_name) -> BaseTestsSpreadsheetHandler:
         tests_handler = TestsSpreadsheetHandler(token_file_name)
         return tests_handler
+
+    @staticmethod
+    def init_deadline_handler(token_file_name) -> BaseDeadlineSpreadsheetHandler:
+        deadline_handler = DeadlineSpreadsheetHandler(token_file_name)
+        return deadline_handler
