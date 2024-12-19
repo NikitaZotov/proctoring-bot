@@ -14,7 +14,6 @@ from ...handlers_chain import HandlersChain
 from ...handlers_registrar import HandlersRegistrar as Registrar
 from ...keyboard.keyboard import KeyboardBuilder
 from ..auth.auth_expectation_chain import AuthExpectationHandlersChain
-from ....storage.spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
 from ....storage.spreadsheet.auth.auth_spreadsheet_handler import AuthSpreadsheetHandler
 
 
@@ -64,6 +63,9 @@ class MainKeyboardsBuilder:
                 {
                     "Отправить лабораторную работу": "lab",
                 },
+                {
+                    "Редактировать ФИО студента": "change_name",
+                },
             ]
         )
 
@@ -75,7 +77,7 @@ class MainHandlersChain(HandlersChain):
 
     _logger = LogInstaller.get_default_logger(__name__, LogInstaller.DEBUG)
     my_spreadsheet_id = "1y82TxM8AuBrVXsDSif8LobwZ1wjIkWDutmoSrIr03b0"
-    path_to_token = "../../../../tokens/auth_token.json"
+    path_to_token = "/home/pengvinchik/Bot/ProctoringBot/sources/tokens/auth_token.json"
 
     @staticmethod
     async def _start_routine(message: types.Message, state: FSMContext):
@@ -233,8 +235,8 @@ class MainHandlersChain(HandlersChain):
                 await message.answer("Эта операция доступна только преподавателям.")
                 return
             spreadsheet_handler = AuthSpreadsheetHandler(
-                spreadsheet_id=my_spreadsheet_id,
-                file_name="/home/pengvinchik/Bot/ProctoringBot/sources/tokens/auth_token.json"
+                spreadsheet_id=MainHandlersChain.my_spreadsheet_id,
+                file_name=MainHandlersChain.path_to_token
             )
 
             usernames = spreadsheet_handler.get_student_usernames()
@@ -249,14 +251,61 @@ class MainHandlersChain(HandlersChain):
                 fio = student_info.get("name", "Не указано")
                 students_list.append(f"{username} - {fio}")
 
+            # Преобразуем список в строку и отправляем пользователю
             students_text = "\n".join(students_list)
             await message.answer(f"Список всех студентов:\n{students_text}")
+
+            # Просим пользователя ввести ник студента
             await message.answer("Введите ник студента, имя которого нужно изменить:")
             await state.set_state(MainStates.CHANGE_NAME_USERNAME)
 
         except Exception as e:
             MainHandlersChain._logger.error(f"Failed to fetch student list: {e}")
             await message.answer("Произошла ошибка при получении списка студентов. Попробуйте позже.")
+            await state.finish()
+
+
+    @staticmethod
+    @Registrar.callback_query_handler(text="change_name")
+    async def change_name_start_callback(query: types.CallbackQuery, state: FSMContext):
+        """
+        Initiates the process of moderating a student's name by showing a list of all students.
+        Called when the user presses the "Редактировать ФИО студента" button.
+        """
+        try:
+            user_data = await state.get_data()
+
+            if user_data.get("type") != "teacher":
+                await query.message.answer("Эта операция доступна только преподавателям.")
+                return
+            spreadsheet_handler = AuthSpreadsheetHandler(
+                spreadsheet_id=MainHandlersChain.my_spreadsheet_id,
+                file_name=MainHandlersChain.path_to_token
+            )
+
+            usernames = spreadsheet_handler.get_student_usernames()
+            if not usernames:
+                await query.message.answer("В таблице нет студентов.")
+                return
+
+            students_list = []
+            for username_row in usernames:
+                username = username_row[0]  # Извлекаем строку из вложенного списка
+                student_info = spreadsheet_handler.get_student_by_username(username)
+                fio = student_info.get("name", "Не указано")
+                students_list.append(f"{username} - {fio}")
+
+            # Преобразуем список в строку и отправляем пользователю
+            students_text = "\n".join(students_list)
+            await query.message.answer(f"Список всех студентов:\n{students_text}")
+
+            # Просим пользователя ввести ник студента
+            await query.message.answer("Введите ник студента, имя которого нужно изменить:")
+            await state.set_state(MainStates.CHANGE_NAME_USERNAME)
+
+        except Exception as e:
+            MainHandlersChain._logger.error(f"Failed to fetch student list: {e}")
+            await query.message.answer("Произошла ошибка при получении списка студентов. Попробуйте позже.")
             await state.finish()
 
     @staticmethod
@@ -272,6 +321,9 @@ class MainHandlersChain(HandlersChain):
         :type state: :obj:`FSMContext`
         """
         username = message.text.strip()
+        #spreadsheet_handler = BaseAuthSpreadsheetHandler()
+        #student_info = spreadsheet_handler.get_student_by_username(username)
+        #current_name = student_info.get("name")
         await state.update_data(username_to_change=username)
         await message.answer(f"Студент с ником @{username} найден. Введите новое ФИО для студента:")
         await state.set_state(MainStates.CHANGE_NAME_NEW_NAME)
@@ -293,7 +345,7 @@ class MainHandlersChain(HandlersChain):
         username_to_change = data.get("username_to_change")
 
         try:
-            spreadsheet_handler = AuthSpreadsheetHandler(spreadsheet_id="1y82TxM8AuBrVXsDSif8LobwZ1wjIkWDutmoSrIr03b0", file_name="/home/pengvinchik/Bot/ProctoringBot/sources/tokens/auth_token.json")
+            spreadsheet_handler = AuthSpreadsheetHandler(spreadsheet_id=MainHandlersChain.my_spreadsheet_id, file_name=MainHandlersChain.path_to_token)
             success = spreadsheet_handler.update_student_name(username=username_to_change, new_name=new_name)
 
             if success:
