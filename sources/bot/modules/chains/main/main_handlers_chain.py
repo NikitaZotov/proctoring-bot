@@ -77,7 +77,7 @@ class MainHandlersChain(HandlersChain):
 
     _logger = LogInstaller.get_default_logger(__name__, LogInstaller.DEBUG)
     my_spreadsheet_id = "1y82TxM8AuBrVXsDSif8LobwZ1wjIkWDutmoSrIr03b0"
-    path_to_token = "/home/pengvinchik/Bot/ProctoringBot/sources/tokens/auth_token.json"
+    path_to_token = "../../../../auth_token.json"
 
     @staticmethod
     async def _start_routine(message: types.Message, state: FSMContext):
