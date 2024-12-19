@@ -3,7 +3,7 @@ Students authorization spreadsheet handler implementation module.
 """
 from typing import List
 
-from ....exceptions import InvalidSpreadsheetAttributeException
+from ....exceptions import InvalidSpreadsheetAttributeException, PermissionDeniedException
 from ...base_spreadsheet_storage import BaseSpreadsheetStorage
 from ..spreadsheet_handler import SpreadsheetHandler
 from ..auth.base_auth_spreadsheet_handler import BaseAuthSpreadsheetHandler
@@ -60,6 +60,26 @@ class AuthSpreadsheetHandler(BaseAuthSpreadsheetHandler):
             student.update(name=name, group=group, subgroup=subgroup)
 
         return student
+
+    def update_student_name(self, username: str, new_name: str) -> bool:
+        if not new_name.strip():
+            raise InvalidSpreadsheetAttributeException("Invalid name value.")
+        row = self._handler.get_row_by_first_element(self._student_sheet_title, username)
+        if not row:
+            raise InvalidSpreadsheetAttributeException(f"Student with username '{username}' was not found!")
+
+        attributes = self._handler._get_sheet_attributes(self._student_sheet_title)
+        name_index = attributes.index("ФИО")
+
+        row_number = self._handler.get_first_column_values(self._student_sheet_title).index([username]) + 2
+        row_values = list(row.values())
+        row_values[name_index] = new_name
+
+        try:
+            self._handler._update_spreadsheet_row(self._student_sheet_title, row_number, row_values)
+            return True
+        except Exception as e:
+            raise InvalidSpreadsheetAttributeException(f"Failed to update student row: {e}")
 
     def add_teacher(self, username: str, **kwargs) -> None:
         name = kwargs.get("name")

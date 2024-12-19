@@ -123,3 +123,21 @@ class BaseAuthSpreadsheetHandler(BaseSpreadsheetHandler):
         :rtype: :obj:`dict`
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def update_student_name(self, username: str, new_name: str) -> bool:
+        """
+        Updates the name of a student in the spreadsheet.
+
+        Note: If such student doesn't exist then the operation will not succeed.
+
+        :param username: Student username
+        :type username: :obj:`str`
+
+        :param new_name: The new name for the student
+        :type new_name: :obj:`str`
+
+        :return: Returns True on success.
+        :rtype: :obj:`bool`
+        """
+        raise False
