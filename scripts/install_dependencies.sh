@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 
 if ! command -v poetry &> /dev/null; then
