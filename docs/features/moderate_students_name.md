@@ -21,3 +21,8 @@
 
 ![image](https://github.com/user-attachments/assets/57596615-8010-4b5e-b0f1-e679c66d45a1)
 
+5. В случае попытки модерации ФИО студента другим студентом, бот отправляет сообщение об ошибке:
+   
+![image](https://github.com/user-attachments/assets/1c76eded-3768-4dc4-8fd4-571dbd8a6351)
+
+
