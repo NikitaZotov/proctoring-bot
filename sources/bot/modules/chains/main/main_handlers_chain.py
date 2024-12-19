@@ -74,6 +74,8 @@ class MainHandlersChain(HandlersChain):
     """
 
     _logger = LogInstaller.get_default_logger(__name__, LogInstaller.DEBUG)
+    my_spreadsheet_id = "1y82TxM8AuBrVXsDSif8LobwZ1wjIkWDutmoSrIr03b0"
+    path_to_token = "../../../../tokens/auth_token.json"
 
     @staticmethod
     async def _start_routine(message: types.Message, state: FSMContext):
@@ -231,7 +233,7 @@ class MainHandlersChain(HandlersChain):
                 await message.answer("Эта операция доступна только преподавателям.")
                 return
             spreadsheet_handler = AuthSpreadsheetHandler(
-                spreadsheet_id="1y82TxM8AuBrVXsDSif8LobwZ1wjIkWDutmoSrIr03b0",
+                spreadsheet_id=my_spreadsheet_id,
                 file_name="/home/pengvinchik/Bot/ProctoringBot/sources/tokens/auth_token.json"
             )
 
@@ -270,9 +272,6 @@ class MainHandlersChain(HandlersChain):
         :type state: :obj:`FSMContext`
         """
         username = message.text.strip()
-        #spreadsheet_handler = BaseAuthSpreadsheetHandler()
-        #student_info = spreadsheet_handler.get_student_by_username(username)
-        #current_name = student_info.get("name")
         await state.update_data(username_to_change=username)
         await message.answer(f"Студент с ником @{username} найден. Введите новое ФИО для студента:")
         await state.set_state(MainStates.CHANGE_NAME_NEW_NAME)
