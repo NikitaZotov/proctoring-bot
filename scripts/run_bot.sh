@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd ../
-python3 -m sources.main
+poetry run python3 -m sources.main
