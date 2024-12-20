@@ -39,25 +39,15 @@ class WorksSpreadsheetHandler(BaseWorksSpreadsheetHandler):
         storage.visit_works_handler(self)
 
     def get_student_lab_count(self) -> dict:
-        """
-        Counts the number of valid lab works for each student.
-
-        A lab work is considered valid if it has a non-empty grade and the grade is >= 4.
-
-        :return: Dictionary mapping usernames to the count of valid lab works.
-        :rtype: dict
-        """
         try:
-            data = self._handler.get_sheet_values(self._works_sheet_title, "A2", "F1000")  # Обновлено на "F1000"
+            data = self._handler.get_sheet_values(self._works_sheet_title, "A2", "F1000")  
             rows = data.get("valueRanges", [{}])[0].get("values", [])
             lab_count = {}
 
             for row in rows:
-                if len(row) >= 6:  # Убедиться, что в строке есть все необходимые столбцы
+                if len(row) >= 6: 
                     username = row[0]
-                    grade = row[5]  # Столбец с оценкой ("Оценка")
-
-                    # Проверка: оценка должна быть числом >= 4
+                    grade = row[5] 
                     try:
                         grade = int(grade)
                         if grade >= 4:
@@ -66,7 +56,6 @@ class WorksSpreadsheetHandler(BaseWorksSpreadsheetHandler):
                             else:
                                 lab_count[username] = 1
                     except ValueError:
-                        # Если оценка не является числом, пропускаем
                         continue
 
             return lab_count
