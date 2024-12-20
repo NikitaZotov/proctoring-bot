@@ -82,10 +82,10 @@ class MainHandlersChain(HandlersChain):
     """
 
     _logger = LogInstaller.get_default_logger(__name__, LogInstaller.DEBUG)
-    my_spreadsheet_id = "1A9ivJwhQlYUZJpMlLPb1Hfqobg-8SZGw7DVOMzwabqc"
-    work_spreadsheet_id = "1jRPSL1xPgjelYCsaGxV-T1wKe4PVTLhlr3fDKSwjXI4"
-    path_to_token = "/home/pengvinchik/Bot/ProctoringBot/sources/tokens/auth_token.json"
-    path_to_work_token = "/home/pengvinchik/Bot/ProctoringBot/sources/tokens/works_token.json"
+    my_spreadsheet_id = "1y82TxM8AuBrVXsDSif8LobwZ1wjIkWDutmoSrIr03b0"
+    work_spreadsheet_id = "1fY8Vox86g6zZgYm3Lmpy-7JSNDLAQvEUE7bdYgvR1Zg"
+    path_to_token = "../../../../tokens/auth_token.json"
+    path_to_work_token = "../../../../tokens/works_token.json"
 
     @staticmethod
     async def _start_routine(message: types.Message, state: FSMContext):
@@ -381,10 +381,8 @@ class MainHandlersChain(HandlersChain):
     @Registrar.callback_query_handler(text="set_admissions")
     async def set_admissions(query: types.CallbackQuery, state: FSMContext):
         """
-        Sets admissions for students based on the number of lab works.
-
-        :param message: User message data
-        :type message: :obj:`types.Message`
+        Initiates the process of set admissions to students.
+        Called when the user presses the "Выставить допуски" button.
         """
         user_data = await state.get_data()
 
@@ -410,7 +408,6 @@ class MainHandlersChain(HandlersChain):
         try:
             threshold = int(message.text.strip())
 
-            # Инициализация обработчиков таблиц
             auth_spreadsheet_handler = AuthSpreadsheetHandler(
                 spreadsheet_id=MainHandlersChain.my_spreadsheet_id,
                 file_name=MainHandlersChain.path_to_token,
@@ -420,35 +417,31 @@ class MainHandlersChain(HandlersChain):
                 file_name=MainHandlersChain.path_to_work_token,
             )
 
-            # Получение списка студентов и их лабораторных
             students = auth_spreadsheet_handler.get_student_usernames()
             lab_counts = works_spreadsheet_handler.get_student_lab_count()
 
             admissions = {}
             new_admissions = {}
             for student_row in students:
-                username = student_row[0]  # Извлечение username из строки
+                username = student_row[0] 
                 student_name = auth_spreadsheet_handler.get_student_by_username(username).get("name", "Не указано")
                 student_group = auth_spreadsheet_handler.get_student_by_username(username).get("group", "Не указано")
-                lab_count = lab_counts.get(username, 0)  # Получение количества лабораторных (0, если отсутствует)
+                lab_count = lab_counts.get(username, 0) 
 
-                # Определение статуса допуска
                 status = "Допуск" if lab_count >= threshold else "Недопуск"
                 admissions[username] = status
                 if status == "Допуск":
                     if student_group not in new_admissions:
-                        new_admissions[student_group] = []  # Создаем список для этой группы
+                        new_admissions[student_group] = [] 
                     new_admissions[student_group].append(student_name)
 
-            # Обновление статусов допуска для студентов
             auth_spreadsheet_handler.batch_update_admission_status(admissions)
 
-            # Формирование списка допущенных студентов, отсортированных по группам
             result_text = "Допущенные студенты:\n"
             for group, students_in_group in new_admissions.items():
                 result_text += f"\nГруппа {group}:\n"
-                result_text += "\n".join(students_in_group)  # Список студентов в группе
-                result_text += "\n"  # Разделение между группами
+                result_text += "\n".join(students_in_group) 
+                result_text += "\n" 
 
             if result_text == "Допущенные студенты:\n":
                 await message.answer("Студенты, выполнившие все требования для допуска, отсутствуют.")
