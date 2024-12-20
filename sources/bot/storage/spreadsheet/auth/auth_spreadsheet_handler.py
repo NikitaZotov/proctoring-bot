@@ -95,26 +95,21 @@ class AuthSpreadsheetHandler(BaseAuthSpreadsheetHandler):
         :type admissions: dict
         """
         try:
-            # Получаем данные из таблицы
             rows = self._handler.get_first_column_values(self._student_sheet_title)
             attributes = self._handler._get_sheet_attributes(self._student_sheet_title)
             admission_index = attributes.index("Допуск")
 
             updates = []
 
-            for i, row in enumerate(rows, start=2):  # Строки начинаются с 2 (A1 — заголовок)
+            for i, row in enumerate(rows, start=2): 
                 username = row[0]
                 if username in admissions:
-                    # Формируем данные для обновления
                     updates.append({
                         "range": f"{self._student_sheet_title}!{chr(65 + admission_index)}{i}",
                         "values": [[admissions[username]]]
                     })
-
-            # Получаем service через метод get_service
             service = self.get_service()
 
-            # Отправляем пакетное обновление
             if updates:
                 service.spreadsheets().values().batchUpdate(
                     spreadsheetId=self._handler._spreadsheet_id,
