@@ -15,7 +15,7 @@ from ...handlers_registrar import HandlersRegistrar as Registrar
 from ...keyboard.keyboard import KeyboardBuilder
 from ..auth.auth_expectation_chain import AuthExpectationHandlersChain
 from ....storage.spreadsheet.auth.auth_spreadsheet_handler import AuthSpreadsheetHandler
-from ....storage.spreadsheet.works.works_spreadsheet_handler import WorksSpreadsheetHandler\
+from ....storage.spreadsheet.works.works_spreadsheet_handler import WorksSpreadsheetHandler
 
 
 class MainStates(StatesGroup):
