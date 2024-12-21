@@ -75,10 +75,8 @@ class MainHandlersChain(HandlersChain):
     """
 
     _logger = LogInstaller.get_default_logger(__name__, LogInstaller.DEBUG)
-    #ID таблицы(works)
-    work_spreadsheet_id = "183vR-Xle6pIBZshZWv_7Uqj4c1X0DjpNHMvTWGVjwFU"
-    #Пути к файлу с токенами(work)
-    path_to_work_token = "/home/miko/Projects/proctoring-bot/sources/tokens/works_token.json"
+    work_spreadsheet_id = "your work spreadsheet id"
+    path_to_work_token = "../../../../tokens/works_token.jsonn"
 
     @staticmethod
     async def _start_routine(message: types.Message, state: FSMContext):
