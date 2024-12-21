@@ -16,7 +16,7 @@ class AuthSpreadsheetHandler(BaseAuthSpreadsheetHandler):
 
     def __init__(self, spreadsheet_id: str, file_name: str):
         self._attributes = {
-            "Студенты": ["username", "ФИО", "Группа", "Подгруппа"],
+            "Студенты": ["username", "ФИО", "Группа", "Подгруппа", "Допуск"],
             "Преподаватели": ["username", "ФИО"],
         }
         self._handler = SpreadsheetHandler(file_name, spreadsheet_id)
@@ -60,6 +60,67 @@ class AuthSpreadsheetHandler(BaseAuthSpreadsheetHandler):
             student.update(name=name, group=group, subgroup=subgroup)
 
         return student
+
+    def update_student_name(self, username: str, new_name: str) -> bool:
+        if not new_name.strip():
+            raise InvalidSpreadsheetAttributeException("Invalid name value.")
+        row = self._handler.get_row_by_first_element(self._student_sheet_title, username)
+        if not row:
+            raise InvalidSpreadsheetAttributeException(f"Student with username '{username}' was not found!")
+
+        attributes = self._handler._get_sheet_attributes(self._student_sheet_title)
+        name_index = attributes.index("ФИО")
+
+        row_number = self._handler.get_first_column_values(self._student_sheet_title).index([username]) + 2
+        row_values = list(row.values())
+        row_values[name_index] = new_name
+
+        try:
+            self._handler._update_spreadsheet_row(self._student_sheet_title, row_number, row_values)
+            return True
+        except Exception as e:
+            raise InvalidSpreadsheetAttributeException(f"Failed to update student row: {e}")
+
+    def get_service(self):
+        """
+        Returns the service object to interact with Google Sheets API.
+        """
+        return self._handler._service
+
+    def batch_update_admission_status(self, admissions: dict) -> None:
+        """
+        Batch updates the admission statuses for multiple students.
+
+        :param admissions: A dictionary where keys are usernames and values are statuses ("Допуск" or "Недопуск")
+        :type admissions: dict
+        """
+        try:
+            rows = self._handler.get_first_column_values(self._student_sheet_title)
+            attributes = self._handler._get_sheet_attributes(self._student_sheet_title)
+            admission_index = attributes.index("Допуск")
+
+            updates = []
+
+            for i, row in enumerate(rows, start=2): 
+                username = row[0]
+                if username in admissions:
+                    updates.append({
+                        "range": f"{self._student_sheet_title}!{chr(65 + admission_index)}{i}",
+                        "values": [[admissions[username]]]
+                    })
+            service = self.get_service()
+
+            if updates:
+                service.spreadsheets().values().batchUpdate(
+                    spreadsheetId=self._handler._spreadsheet_id,
+                    body={
+                        "valueInputOption": "USER_ENTERED",
+                        "data": updates
+                    }
+                ).execute()
+
+        except Exception as e:
+            raise InvalidSpreadsheetAttributeException(f"Failed to batch update admission statuses: {e}")
 
     def add_teacher(self, username: str, **kwargs) -> None:
         name = kwargs.get("name")

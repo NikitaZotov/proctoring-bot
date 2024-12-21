@@ -30,10 +30,35 @@ class WorksSpreadsheetHandler(BaseWorksSpreadsheetHandler):
         elif not work:
             raise InvalidSpreadsheetAttributeException("Invalid work value")
         else:
-            self._handler.add_row(self._works_sheet_title, [username, name, group, work])
+            self._handler.add_row(self._works_sheet_title, [username, name, group, subgroup, work])
 
     def remove_student(self, username: str) -> bool:
         return self._handler.remove_row(self._works_sheet_title, username)
 
     def accept_storage(self, storage):
         storage.visit_works_handler(self)
+
+    def get_student_lab_count(self) -> dict:
+        try:
+            data = self._handler.get_sheet_values(self._works_sheet_title, "A2", "F1000")  
+            rows = data.get("valueRanges", [{}])[0].get("values", [])
+            lab_count = {}
+
+            for row in rows:
+                if len(row) >= 6: 
+                    username = row[0]
+                    grade = row[5] 
+                    try:
+                        grade = int(grade)
+                        if grade >= 4:
+                            if username in lab_count:
+                                lab_count[username] += 1
+                            else:
+                                lab_count[username] = 1
+                    except ValueError:
+                        continue
+
+            return lab_count
+        except Exception as e:
+            raise InvalidSpreadsheetAttributeException(f"Failed to count lab works: {e}")
+
