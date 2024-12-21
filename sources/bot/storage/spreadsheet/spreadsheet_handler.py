@@ -54,8 +54,6 @@ class SpreadsheetHandler:
 
         :param default_sheet_title: First spreadsheet page title
         :type default_sheet_title: :obj:`str`
-
-
         """
 
         spreadsheet = (

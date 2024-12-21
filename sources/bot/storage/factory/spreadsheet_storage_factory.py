@@ -8,6 +8,8 @@ from ..spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsh
 from ..spreadsheet.tests.tests_spreadsheet_handler import TestsSpreadsheetHandler
 from ..spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
 from ..spreadsheet.works.works_spreadsheet_handler import WorksSpreadsheetHandler
+from ..spreadsheet.subjects.base_subject_spreadsheet_handler import BaseSubjectsSpreadsheetHandler
+from ..spreadsheet.subjects.subject_spreadsheet_handler import SubjectSpreadsheetHandler
 from ..spreadsheet_storage import SpreadsheetStorage
 from ..factory.storage_factory import StorageFactory
 
@@ -35,3 +37,8 @@ class SpreadsheetStorageFactory(StorageFactory):
     def init_tests_handler(token_file_name) -> BaseTestsSpreadsheetHandler:
         tests_handler = TestsSpreadsheetHandler(token_file_name)
         return tests_handler
+
+    @staticmethod
+    def init_subjects_handler(spreadsheet_id, token_file_name) -> BaseSubjectsSpreadsheetHandler:
+        subjects_handler = SubjectSpreadsheetHandler(spreadsheet_id, token_file_name)
+        return subjects_handler

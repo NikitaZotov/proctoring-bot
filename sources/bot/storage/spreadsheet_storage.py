@@ -6,9 +6,11 @@ from typing import Dict
 
 from .base_spreadsheet_storage import BaseSpreadsheetStorage
 from .spreadsheet.auth.base_auth_spreadsheet_handler import BaseAuthSpreadsheetHandler
+from .spreadsheet.subjects.subject_spreadsheet_handler import SubjectSpreadsheetHandler
 from .spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
 from .spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
 from .spreadsheet.works.works_spreadsheet_handler import WorksSpreadsheetHandler
+from .spreadsheet.subjects.base_subject_spreadsheet_handler import BaseSubjectsSpreadsheetHandler
 
 
 class SpreadsheetStorage(BaseSpreadsheetStorage):
@@ -21,6 +23,7 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
         self._auth_handler = None
         self._works_handler = None
         self._tests_handler = None
+        self._subjects_handler = None
 
     def resolve_address(self, chat, user):
         chat_id, user_id = map(str, self.check_address(chat=chat, user=user))
@@ -45,7 +48,8 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
 
     async def _get_table_data(self, user_data):
         await self._upload_register_data(user_data)
-        await self._upload_works_data(user_data) #needs for uploading labs table values
+        await self._upload_works_data(user_data)
+        await self._upload_subjects_data(user_data)#needs for uploading labs table values
         return copy.deepcopy(user_data)
 
     async def _upload_register_data(self, user_data):
@@ -75,6 +79,15 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
             user_data["labs"] = lab_works
         return user_data
 
+    async def _upload_subjects_data(self, user_data):
+        subjects_handler: SubjectSpreadsheetHandler = self._subjects_handler
+        username = user_data.get("username")
+        subjects_data = user_data.get("subjects", {})
+        if not subjects_data:
+            subjects = subjects_handler.get_subjects()
+            user_data["subjects"] = subjects
+        return user_data
+
     async def update_data(self, *, chat=None, user=None, data=None, **kwargs):
         if data is None:
             data = {}
@@ -91,14 +104,14 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
         await self._update_table(user_data)
 
     async def _update_table(self, user_data):
-        print(f"_update_table -----> {user_data}")
         username = user_data.get("username")
         user_type = user_data.get("type")
         auth_data = user_data.get("auth")
         works_data = user_data.get("works")
         labs_data = user_data.get("labs")
-        print(f"labs_data -> {labs_data}")
         tests_data = user_data.get("tests")
+        subjects_data = user_data.get("subjects")
+        print(f"<><><><><>< {subjects_data}")
 
         if auth_data is not None:
             if auth_data.get("name") and auth_data.get("group") and auth_data.get("subgroup"):
@@ -115,6 +128,10 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
                 await self._receive_test(tests_data, tests_data.get("test_link"))
             if user_type == "student" and tests_data.get("is_finished"):
                 await self._write_answers(tests_data, auth_data)
+
+        if subjects_data is not None:
+            if user_type == "teacher":
+                await self._add_subject(subjects_data)
 
     async def _write_answers(self, tests_data, auth_data):
         tests_handler: BaseTestsSpreadsheetHandler = self._tests_handler
@@ -136,7 +153,6 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
 
     async def _add_lab(self, labs_data):
         labs_handler: WorksSpreadsheetHandler = self._works_handler
-        print(f"updater {labs_data}")
         if isinstance(labs_data, list):
             for lab_data in labs_data:
                 lab_data.setdefault('text', '')
@@ -163,7 +179,14 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
                 auth_handler.add_student(username, **auth_data)
         elif user_type == "teacher":
             if auth_handler.get_teacher_by_username(username) == {}:
-                auth_handler.add_student(username, **auth_data)
+                auth_handler.add_teacher(username, **auth_data)
+
+
+    async def _add_subject(self, subjects_data):
+        subjects_handler: BaseSubjectsSpreadsheetHandler = self._subjects_handler
+        subjects_data.setdefault('subject_title', '')
+        subjects_data.setdefault('subject_text', '')
+        subjects_handler.add_subject(**subjects_data)
 
     def _cleanup(self, chat, user):
         chat, user = self.resolve_address(chat=chat, user=user)
@@ -180,3 +203,6 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
 
     def visit_tests_handler(self, tests_handler: BaseTestsSpreadsheetHandler):
         self._tests_handler = tests_handler
+
+    def visit_subjects_handler(self, subjects_handler: BaseSubjectsSpreadsheetHandler):
+        self._subjects_handler = subjects_handler

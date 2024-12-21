@@ -3,7 +3,7 @@ import requests
 from datetime import datetime, timedelta
 from sources.bot.storage.model.lesson_type import LessonType
 from sources.bot.storage.model.subgroup import Subgroup
-
+from typing import List
 
 class ScheduleService:
     """
@@ -82,7 +82,7 @@ class ScheduleService:
 
         return lessons
 
-    def get_deadlines(self, laboratory_works: list[int]):
+    def get_deadlines(self, laboratory_works: List[int]):
         """
         Generates deadlines for laboratory works
         :param laboratory_works: laboratory works to find deadlines for
@@ -118,7 +118,7 @@ class ScheduleService:
 
         return deadlines
 
-    def distribute_lessons(self, deadlines: list[datetime]):
+    def distribute_lessons(self, deadlines: List[datetime]):
         """
         Calculates the number of classes for laboratory work
         :param deadlines: deadlines to find classes count for

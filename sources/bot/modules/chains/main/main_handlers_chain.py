@@ -44,23 +44,37 @@ class MainKeyboardsBuilder:
         )
 
     @staticmethod
-    def get_info_keyboard() -> InlineKeyboardMarkup:
+    def get_info_keyboard(user_data) -> InlineKeyboardMarkup:
         """
         Gets keyboard to send information about user message to chat.
-
         :return: Returns inline keyboard markup.
         :rtype: :obj:`InlineKeyboardMarkup`
         """
-        return KeyboardBuilder.get_inline_keyboard_markup(
-            [
-                {
-                    "Посмотреть информацию": "info",
-                },
-                {
-                    "Отправить лабораторную работу": "lab",
-                },
-            ]
-        )
+        if user_data["type"] == "student":
+            return KeyboardBuilder.get_inline_keyboard_markup(
+                [
+                    {
+                        "Посмотреть информацию": "info",
+                    },
+                    {
+                        "Отправить лабораторную работу": "lab",
+                    },
+                    {
+                        "Посмотреть информацию о дисциплине": "get_subject_description"
+                    },
+                ]
+            )
+        else:
+            return KeyboardBuilder.get_inline_keyboard_markup(
+                [
+                    {
+                        "Посмотреть информацию": "info",
+                    },
+                    {
+                        "Добавить информацию о дисциплине": "subject_description_add",
+                    },
+                ]
+            )
 
 
 class MainHandlersChain(HandlersChain):
@@ -88,7 +102,7 @@ class MainHandlersChain(HandlersChain):
         else:
             MainHandlersChain._logger.debug(f"User @{username} is registered")
             text = f"{greeting}Вы уже зарегистрированы.\nПодробности: @{bot.username}."
-            keyboard_markup = MainKeyboardsBuilder.get_info_keyboard()
+            keyboard_markup = MainKeyboardsBuilder.get_info_keyboard(data)
 
         return text, keyboard_markup, not_registered
 

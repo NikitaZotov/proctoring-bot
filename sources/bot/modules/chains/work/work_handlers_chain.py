@@ -147,9 +147,9 @@ class WorkHandlersChain(HandlersChain):
         lab_deadline_date = lab.get("deadline_date", "Дедлайн отсутствует")
 
         response = f"Лабораторная работа: {lab_name}\n\n"
-        response += f"Содержание:\n{lab_content}"
-        response += f"Сложность:\n{lab_difficulty}"
-        response += f"Дедлайн:\n{lab_deadline_date}"
+        response += f"Содержание:\n{lab_content}\n"
+        response += f"Сложность:\n{lab_difficulty}\n"
+        response += f"Дедлайн:\n{lab_deadline_date}\n"
 
         return response
 

@@ -7,6 +7,7 @@ from ..base_spreadsheet_storage import BaseSpreadsheetStorage
 from ..spreadsheet.auth.base_auth_spreadsheet_handler import BaseAuthSpreadsheetHandler
 from ..spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
 from ..spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
+from ..spreadsheet.subjects.base_subject_spreadsheet_handler import BaseSubjectsSpreadsheetHandler
 
 
 class StorageFactory:
@@ -57,6 +58,20 @@ class StorageFactory:
 
         :return: Returns student works sending spreadsheet handler
         :rtype: :obj:`BaseWorksSpreadsheetHandler`
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def init_subjects_handler(spreadsheet_id: str, token_file_name: str) -> BaseSubjectsSpreadsheetHandler:
+        """
+        Creates concrete student works sending spreadsheet handler.
+        :param spreadsheet_id: Spreadsheet unique id
+        :type spreadsheet_id: :obj:`str`
+        :param token_file_name: Spreadsheet token file name
+        :type token_file_name: :obj:`str`
+        :return: Returns student works sending spreadsheet handler
+        :rtype: :obj:`BaseSubjectsSpreadsheetHandler`
         """
         raise NotImplementedError
 

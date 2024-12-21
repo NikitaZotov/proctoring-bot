@@ -1,9 +1,9 @@
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, root_validator
 from sources.bot.storage.model.schedule_day import ScheduleDay
 from sources.bot.storage.model.day import Day
 from sources.bot.storage.model.lesson import Lesson
-
+from typing import List
 
 class Schedule(BaseModel):
     """
@@ -11,9 +11,9 @@ class Schedule(BaseModel):
     """
     start_semester_date: datetime = Field(alias="startDate")
     end_semester_date: datetime = Field(alias="endDate")
-    schedules: list[ScheduleDay] = []
+    schedules: List[ScheduleDay] = []
 
-    @model_validator(mode="before")
+    @root_validator(pre=True)
     def schedules_parse(cls, values):
         if not isinstance(values, dict):
             return values

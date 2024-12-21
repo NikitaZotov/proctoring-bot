@@ -8,7 +8,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from .spreadsheet.auth.base_auth_spreadsheet_handler import BaseAuthSpreadsheetHandler
 from .spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
 from .spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
-
+from .spreadsheet.subjects.base_subject_spreadsheet_handler import BaseSubjectsSpreadsheetHandler
 
 class BaseSpreadsheetStorage(MemoryStorage):
     """
@@ -34,6 +34,15 @@ class BaseSpreadsheetStorage(MemoryStorage):
 
         :param works_handler: Student works sending spreadsheet handler instance
         :type works_handler: :obj:`BaseWorksSpreadsheetHandler`
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_subjects_handler(self, subjects_handler: BaseSubjectsSpreadsheetHandler):
+        """
+        Allows accessing to student works sending spreadsheet handler.
+        :param subjects_handler: Subjects sending spreadsheet handler instance
+        :type subjects_handler: :obj:`BaseSubjectsSpreadsheetHandler`
         """
         raise NotImplementedError
 
