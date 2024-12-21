@@ -54,7 +54,7 @@ class SpreadsheetStorage(BaseSpreadsheetStorage):
         username = user_data.get("username")
         auth_data = user_data.get("auth")
 
-        if auth_data == {}:
+        if auth_data == {} or auth_data is None:
             student = auth_handler.get_student_by_username(username)
             teacher = auth_handler.get_teacher_by_username(username)
 
