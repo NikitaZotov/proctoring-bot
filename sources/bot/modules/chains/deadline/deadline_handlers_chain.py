@@ -12,6 +12,7 @@ from ...handlers_chain import HandlersChain
 from ...handlers_registrar import HandlersRegistrar as Registrar
 from ....storage.spreadsheet.auth.auth_spreadsheet_handler import AuthSpreadsheetHandler
 from ....storage.spreadsheet.deadline.deadline_spreadsheet_handler import DeadlineSpreadsheetHandler
+from ....storage.spreadsheet.util.mass_message_send import send_message_to_users
 from ....storage.spreadsheet.util.spreadsheet_config import SpreadsheetConfig
 
 
@@ -38,32 +39,42 @@ class DeadlineHandlersChain(HandlersChain):
 
     @staticmethod
     @Registrar.message_handler(commands=["notification"], state="*")
-    async def deadline_start_handler(message: types.Message, state: FSMContext):
+    async def deadline_notification_handler(message: types.Message, state: FSMContext):
         DeadlineHandlersChain._logger.debug(f"Start deadline conversation state")
-        usernames = await DeadlineHandlersChain._get_usernames()
-        usernames = [username[0] for username in usernames]
-        deadlines = await DeadlineHandlersChain._get_user_deadlines()
+        data = await state.get_data()
+        if data["type"] == "teacher":
+            usernames = await DeadlineHandlersChain._get_usernames()
+            usernames = [username[0] for username in usernames]
+            deadlines = await DeadlineHandlersChain._get_user_deadlines()
 
-        failed_deadlines = []
-        today_deadlines = []
-        for deadline in deadlines:
-            date_object = datetime.strptime(deadline["deadline"], "%d.%m.%Y").date()
-            if date_object < datetime.now().date():
-                failed_deadlines.append(deadline)
-            elif date_object == datetime.now().date():
-                today_deadlines.append(deadline)
-        # return formatted_deadlines
-        message.bot.
+            failed_deadlines = []
+            today_deadlines = []
+            for deadline in deadlines:
+                try:
+                    date_object = datetime.strptime(deadline["deadline"], "%d.%m.%Y").date()
+                    if date_object < datetime.now().date():
+                        failed_deadlines.append(deadline)
+                    elif date_object == datetime.now().date():
+                        today_deadlines.append(deadline)
+                except (KeyError, ValueError) as e:
+                    DeadlineHandlersChain._logger.error(f"Deadline error: {deadline}, ошибка: {e}")
 
-        # deadlines = [deadline['deadline'] for deadline in deadlines]
+            if usernames:
+                await send_message_to_users(
+                    usernames,
+                    DeadlineHandlersChain._failed_deadlines(failed_deadlines),
+                    bot=message.bot,
+                )
+                await send_message_to_users(
+                    usernames,
+                    DeadlineHandlersChain._today_deadlines(today_deadlines),
+                    bot=message.bot,
+                )
+                await message.answer("Уведомления отправлены.")
+            else:
+                await message.answer("На данный момент нет студентов.")
 
-        if usernames:
-            await message.answer(DeadlineHandlersChain._failed_deadlines(failed_deadlines))
-            await message.answer(DeadlineHandlersChain._today_deadlines(today_deadlines))
-        else:
-            await message.answer("На данный момент нет студентов.")
-
-        await state.finish()
+            await state.finish()
 
     @staticmethod
     @Registrar.callback_query_handler(text="deadline")
@@ -109,20 +120,15 @@ class DeadlineHandlersChain(HandlersChain):
 
     @staticmethod
     async def _get_usernames():
-        # try:
         auth = AuthSpreadsheetHandler(
             spreadsheet_id='',
             file_name='',
             config_class=SpreadsheetConfig
         )
 
-        usernames = auth.get_student_usernames()
+        usernames = auth.get_student_user_ids()
 
         return usernames
-
-        # except Exception as e:
-        #     DeadlineHandlersChain._logger.error(f"Error getting usernames: {e}")
-        #     return []
 
     @staticmethod
     def _today_deadlines(deadlines):
