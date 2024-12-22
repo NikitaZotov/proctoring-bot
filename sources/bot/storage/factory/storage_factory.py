@@ -7,6 +7,7 @@ from ..base_spreadsheet_storage import BaseSpreadsheetStorage
 from ..spreadsheet.auth.base_auth_spreadsheet_handler import BaseAuthSpreadsheetHandler
 from ..spreadsheet.tests.base_tests_spreadsheet_handler import BaseTestsSpreadsheetHandler
 from ..spreadsheet.works.base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
+from ..spreadsheet.deadline.base_deadline_spreadsheet_handler import BaseDeadlineSpreadsheetHandler
 
 
 class StorageFactory:
@@ -65,6 +66,23 @@ class StorageFactory:
     def init_tests_handler(token_file_name: str) -> BaseTestsSpreadsheetHandler:
         """
         Creates concrete student tests managing spreadsheet handler.
+
+        :param token_file_name: Spreadsheet token file name
+        :type token_file_name: :obj:`str`
+
+        :return: Returns student tests managing spreadsheet handler
+        :rtype: :obj:`BaseTestsSpreadsheetHandler`
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def init_deadline_handler(spreadsheet_id: str, token_file_name: str) -> BaseDeadlineSpreadsheetHandler:
+        """
+        Creates concrete student tests managing spreadsheet handler.
+
+        :param spreadsheet_id: Spreadsheet id
+        :type token_file_name: :obj:`str`
 
         :param token_file_name: Spreadsheet token file name
         :type token_file_name: :obj:`str`

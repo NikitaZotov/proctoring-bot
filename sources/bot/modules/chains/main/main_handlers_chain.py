@@ -44,23 +44,38 @@ class MainKeyboardsBuilder:
         )
 
     @staticmethod
-    def get_info_keyboard() -> InlineKeyboardMarkup:
+    def get_info_keyboard(user_data) -> InlineKeyboardMarkup:
         """
         Gets keyboard to send information about user message to chat.
 
         :return: Returns inline keyboard markup.
         :rtype: :obj:`InlineKeyboardMarkup`
         """
-        return KeyboardBuilder.get_inline_keyboard_markup(
-            [
-                {
-                    "Посмотреть информацию": "info",
-                },
-                {
-                    "Отправить лабораторную работу": "lab",
-                },
-            ]
-        )
+        if user_data["type"] == "student":
+            return KeyboardBuilder.get_inline_keyboard_markup(
+                [
+                    {
+                        "Посмотреть информацию": "info",
+                    },
+                    {
+                        "Отправить лабораторную работу": "lab",
+                    },
+                    {
+                        "Посмотреть дедлайн": "deadline"
+                    },
+                    {
+                        "Посмотреть дедлайны по дисциплине": "deadline_subject"
+                    }
+                ]
+            )
+        else:
+            return KeyboardBuilder.get_inline_keyboard_markup(
+                [
+                    {
+                        "Посмотреть информацию": "info",
+                    }
+                ]
+            )
 
 
 class MainHandlersChain(HandlersChain):
@@ -72,11 +87,12 @@ class MainHandlersChain(HandlersChain):
 
     @staticmethod
     async def _start_routine(message: types.Message, state: FSMContext):
+        user_id = message.from_user.id
         username = message.from_user.username
         greeting = f"Привет, {message.from_user.first_name} (@{username}).\n"
         bot = await Registrar.bot.get_me()
 
-        await state.update_data(username=username)
+        await state.update_data(user_id=user_id)
         data = await state.get_data()
         data_size = len(data.get("auth").keys())
         not_registered = data_size != 3 and data_size != 1
@@ -88,7 +104,7 @@ class MainHandlersChain(HandlersChain):
         else:
             MainHandlersChain._logger.debug(f"User @{username} is registered")
             text = f"{greeting}Вы уже зарегистрированы.\nПодробности: @{bot.username}."
-            keyboard_markup = MainKeyboardsBuilder.get_info_keyboard()
+            keyboard_markup = MainKeyboardsBuilder.get_info_keyboard(data)
 
         return text, keyboard_markup, not_registered
 
@@ -155,7 +171,7 @@ class MainHandlersChain(HandlersChain):
     @Registrar.message_handler(commands=["info"])
     async def get_info_handler(message: types.Message, state: FSMContext):
         """
-        Sends to user information: username, name, group and subgroup by 'info' command.
+        Sends to user information: user_id, name, group and subgroup by 'info' command.
 
         :param message: User message data
         :type message: :obj:`types.Message`
@@ -170,7 +186,7 @@ class MainHandlersChain(HandlersChain):
     @Registrar.callback_query_handler(text="info")
     async def get_info_handler(query: types.CallbackQuery, state: FSMContext):
         """
-        Sends to user information: username, name, group and subgroup by 'info' callback query message.
+        Sends to user information: user_id, name, group and subgroup by 'info' callback query message.
 
         :param query: Callback query message
         :type query: :obj:`types.CallbackQuery`
@@ -184,7 +200,7 @@ class MainHandlersChain(HandlersChain):
     @staticmethod
     def get_info(user_data) -> str:
         """
-        Gets to user information: username, name, group and subgroup from spreadsheet storage.
+        Gets to user information: user_id, name, group and subgroup from spreadsheet storage.
 
         :param user_data: User data
         :type user_data: :obj:`dict[Any]`
@@ -201,6 +217,6 @@ class MainHandlersChain(HandlersChain):
 
             return f"Информация о Вас:\nФИО: {name}\nГруппа: {group}\nПодгруппа: {subgroup}\n"
         elif user_data["type"] == "teacher":
-            name = auth_data.get("ФИО")
+            name = auth_data.get("name")
 
             return f"Информация о Вас:\nФИО: {name}\n"

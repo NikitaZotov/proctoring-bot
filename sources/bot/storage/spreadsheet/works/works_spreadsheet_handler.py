@@ -1,19 +1,27 @@
+from ..util.spreadsheet_config import SpreadsheetConfig
 from ....exceptions import InvalidSpreadsheetAttributeException
 from ..spreadsheet_handler import SpreadsheetHandler
 from .base_works_spreadsheet_handler import BaseWorksSpreadsheetHandler
 
 
 class WorksSpreadsheetHandler(BaseWorksSpreadsheetHandler):
-    def __init__(self, spreadsheet_id: str, file_name: str):
+    def __init__(self, spreadsheet_id: str, file_name: str, config_class=None):
         self._attributes = {
             "works": ["username", "ФИО", "Группа", "Подгруппа", "Лабораторная работа"],
         }
+        self._config: SpreadsheetConfig = config_class
         self._handler = SpreadsheetHandler(file_name, spreadsheet_id)
         self._works_sheet_title = list(self._attributes.keys())[0]
 
+    def handler(self):
+        spreadsheet_id: str = self._config.works_id
+        file_name: str = self._config.works_token
+        return SpreadsheetHandler(file_name, spreadsheet_id)
+
     def create_spreadsheet(self, spreadsheet_title="Информация о лабораторных работах") -> None:
-        self._handler.create_spreadsheet(spreadsheet_title)
-        self._handler.add_row(spreadsheet_title, self._attributes.get("works"))
+        handler = self.handler()
+        handler.create_spreadsheet(spreadsheet_title)
+        handler.add_row(spreadsheet_title, self._attributes.get("works"))
 
     def add_student_work(self, username: str, works_data: str, **kwargs) -> None:
         name = kwargs.get("name")
@@ -30,10 +38,10 @@ class WorksSpreadsheetHandler(BaseWorksSpreadsheetHandler):
         elif not work:
             raise InvalidSpreadsheetAttributeException("Invalid work value")
         else:
-            self._handler.add_row(self._works_sheet_title, [username, name, group, work])
+            self.handler().add_row(self._works_sheet_title, [username, name, group, work])
 
     def remove_student(self, username: str) -> bool:
-        return self._handler.remove_row(self._works_sheet_title, username)
+        return self.handler().remove_row(self._works_sheet_title, username)
 
     def accept_storage(self, storage):
         storage.visit_works_handler(self)
