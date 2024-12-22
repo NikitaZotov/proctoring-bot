@@ -8,6 +8,7 @@ from sources.bot.storage.base_spreadsheet_storage import BaseSpreadsheetStorage
 from sources.bot.storage.spreadsheet.spreadsheet_handler import SpreadsheetHandler
 from sources.bot.storage.spreadsheet.deadline.base_deadline_spreadsheet_handler import BaseDeadlineSpreadsheetHandler
 from sources.bot.loggers import LogInstaller
+from sources.bot.storage.spreadsheet.util.spreadsheet_config import SpreadsheetConfig
 
 
 class DeadlineSpreadsheetHandler(BaseDeadlineSpreadsheetHandler):
@@ -15,16 +16,22 @@ class DeadlineSpreadsheetHandler(BaseDeadlineSpreadsheetHandler):
     Students deadline spreadsheet handler class implementation.
     """
 
-    def __init__(self, spreadsheet_id: str, file_name: str):
+    def __init__(self, spreadsheet_id: str, file_name: str, config_class=None):
         self._logger = LogInstaller.get_default_logger(__name__, LogInstaller.DEBUG)
         self._attributes = {
             "Labs": ["Название дисциплины", "Название лабораторной", "Дедлайн", "Описание лабораторной"]}
-        self._handler = SpreadsheetHandler(file_name, spreadsheet_id)
+        self._config: SpreadsheetConfig = config_class
         self._labs_sheet_title = list(self._attributes.keys())[0]
 
+    def handler(self):
+        spreadsheet_id: str = self._config.deadline_id
+        file_name: str = self._config.deadline_token
+        return SpreadsheetHandler(file_name, spreadsheet_id)
+
     def create_spreadsheet(self, spreadsheet_title="Laboratory works"):
-        self._handler.create_spreadsheet(spreadsheet_title, self._labs_sheet_title)
-        self._handler.add_row(self._labs_sheet_title, self._attributes.get(self._labs_sheet_title))
+        handler = self.handler()
+        handler.create_spreadsheet(spreadsheet_title, self._labs_sheet_title)
+        handler.add_row(self._labs_sheet_title, self._attributes.get(self._labs_sheet_title))
         self._logger.debug(f"Method create_spreadsheet({self._labs_sheet_title})")
 
     def add_deadline(self, **kwargs):
@@ -36,7 +43,7 @@ class DeadlineSpreadsheetHandler(BaseDeadlineSpreadsheetHandler):
         if not all([discipline_name, lab_name, deadline]):
             raise InvalidSpreadsheetAttributeException("Missing required deadline information")
 
-        self._handler.add_row(self._labs_sheet_title, [
+        self.handler().add_row(self._labs_sheet_title, [
             discipline_name,
             lab_name,
             deadline,
@@ -46,7 +53,7 @@ class DeadlineSpreadsheetHandler(BaseDeadlineSpreadsheetHandler):
 
     def get_deadline(self, discipline_name: str = None, lab_name: str = None) -> List[dict]:
         results = []
-        data = self._handler.get_sheet_values(
+        data = self.handler().get_sheet_values(
             self._labs_sheet_title,
             "A2",
             "F1000"

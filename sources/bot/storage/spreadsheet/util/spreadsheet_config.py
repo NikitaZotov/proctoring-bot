@@ -12,6 +12,8 @@ class SpreadsheetConfig:
     works_token: Optional[str] = None
     tests_id: Optional[str] = None
     tests_token: Optional[str] = None
+    deadline_id: Optional[str] = None
+    deadline_token: Optional[str] = None
 
     ini_path: Optional[str] = None
     json_dir_path: Optional[str] = None
@@ -35,6 +37,8 @@ class SpreadsheetConfig:
             cls.works_token = spreadsheet_section.get("works_token")
             cls.tests_id = spreadsheet_section.get("tests_id")
             cls.tests_token = spreadsheet_section.get("tests_token")
+            cls.deadline_id = spreadsheet_section.get("deadline_id")
+            cls.deadline_token = spreadsheet_section.get("deadline_token")
 
     @classmethod
     def save_to_file(cls, file_path: str):

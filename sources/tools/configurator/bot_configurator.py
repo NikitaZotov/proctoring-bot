@@ -26,6 +26,7 @@ class BotConfigurator(BaseBotConfigurator):
         storage.visit_auth_handler(self._config_auth_handler(storage_factory))
         storage.visit_works_handler(self._config_works_handler(storage_factory))
         storage.visit_tests_handler(self._config_tests_handler(storage_factory))
+        storage.visit_deadline_handler(self._config_deadline_handler(storage_factory))
 
         return storage
 
@@ -40,6 +41,12 @@ class BotConfigurator(BaseBotConfigurator):
         token = self._config.get_spreadsheet_option("works_token")
 
         return storage_factory.init_works_handler(spreadsheet_id, token)
+
+    def _config_deadline_handler(self, storage_factory: SpreadsheetStorageFactory):
+        spreadsheet_id = self._config.get_spreadsheet_option("deadline_id")
+        token = self._config.get_spreadsheet_option("deadline_token")
+
+        return storage_factory.init_deadline_handler(spreadsheet_id, token)
 
     def _config_tests_handler(self, storage_factory: SpreadsheetStorageFactory):
         token = self._config.get_spreadsheet_option("tests_token")

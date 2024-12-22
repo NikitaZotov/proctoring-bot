@@ -40,10 +40,13 @@ class SpreadsheetStorageFactory(StorageFactory):
 
     @staticmethod
     def init_tests_handler(token_file_name) -> BaseTestsSpreadsheetHandler:
+        return
         tests_handler = TestsSpreadsheetHandler(token_file_name)
         return tests_handler
 
     @staticmethod
-    def init_deadline_handler(token_file_name) -> BaseDeadlineSpreadsheetHandler:
-        deadline_handler = DeadlineSpreadsheetHandler(token_file_name)
+    def init_deadline_handler(spreadsheet_id, token_file_name) -> BaseDeadlineSpreadsheetHandler:
+        SpreadsheetConfig.set_value("deadline_id", spreadsheet_id)
+        SpreadsheetConfig.set_value("deadline_token", token_file_name)
+        deadline_handler = DeadlineSpreadsheetHandler(spreadsheet_id, token_file_name, SpreadsheetConfig)
         return deadline_handler

@@ -193,6 +193,16 @@ class SpreadsheetHandler:
         sheet_values = results["valueRanges"][0]["values"]
         return list(filter(lambda v: v != [], sheet_values[1:]))
 
+    def gel_all_rows(self, sheet_title: str):
+        alphabet_start_index = 64
+        right_corner = chr(alphabet_start_index + self._get_first_row_length(sheet_title))
+        results = self.get_sheet_values(sheet_title, "A2", f"{right_corner}1000")
+
+        if results["valueRanges"][0].get("values"):
+            sheet_values = results["valueRanges"][0]["values"]
+        else:
+            return {}
+
     def get_row_by_first_element(self, sheet_title: str, element: str) -> dict:
         """
         Gets row in spreadsheet by its first field.

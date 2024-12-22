@@ -77,9 +77,12 @@ class StorageFactory:
 
     @staticmethod
     @abstractmethod
-    def init_deadline_handler(token_file_name: str) -> BaseDeadlineSpreadsheetHandler:
+    def init_deadline_handler(spreadsheet_id: str, token_file_name: str) -> BaseDeadlineSpreadsheetHandler:
         """
         Creates concrete student tests managing spreadsheet handler.
+
+        :param spreadsheet_id: Spreadsheet id
+        :type token_file_name: :obj:`str`
 
         :param token_file_name: Spreadsheet token file name
         :type token_file_name: :obj:`str`

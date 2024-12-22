@@ -21,7 +21,6 @@ class AuthSpreadsheetHandler(BaseAuthSpreadsheetHandler):
             "Преподаватели": ["username", "ФИО"],
         }
         self._config: SpreadsheetConfig = config_class
-        self._handler = SpreadsheetHandler(file_name, spreadsheet_id)
         self._student_sheet_title = list(self._attributes.keys())[0]
         self._teacher_sheet_title = list(self._attributes.keys())[1]
 
